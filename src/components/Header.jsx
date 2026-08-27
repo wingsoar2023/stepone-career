@@ -1,14 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Rocket, Globe, RotateCcw, Sparkles, User, LogOut, Zap, ShieldCheck } from 'lucide-react';
+import { Rocket, Globe, RotateCcw, Sparkles, User, LogOut, Zap, ShieldCheck, Download } from 'lucide-react';
 import { getTranslation } from '../utils/i18n';
 import { useAuth } from '../context/AuthContext';
 
 export default function Header({ activeTab, setActiveTab, currentLang, setCurrentLang, onResetAll, onLoadDemo }) {
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
 
   const { user, isLoggedIn, isPro, tier, logout, setShowAuthModal, triggerPaywall } = useAuth();
   const t = (key) => getTranslation(currentLang, key);
+
+  // Listen for PWA installation prompt
+  useEffect(() => {
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) {
+      alert("To install StepOne Career on your device:\n\n• On Chrome/Edge: Click the install icon in the address bar.\n• On Android: Tap Chrome menu (⋮) → 'Install app' or 'Add to Home screen'.\n• On iPhone: Tap Share icon (⬆️) → 'Add to Home Screen'.");
+      return;
+    }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   // Keep <html lang> and text direction (RTL for Arabic) in sync with the UI language.
   useEffect(() => {
@@ -59,36 +82,66 @@ export default function Header({ activeTab, setActiveTab, currentLang, setCurren
         flexWrap: 'wrap',
         gap: '1rem'
       }}>
-        {/* Brand Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }} onClick={() => setActiveTab('roadmap')}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent-purple) 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'
-          }}>
-            <Rocket size={22} />
-          </div>
-          <div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <span>StepOne</span>
-              <span style={{ color: 'var(--primary)', fontWeight: 700 }}>Career</span>
-              <span style={{
-                fontSize: '0.65rem',
-                background: 'var(--primary-light)',
-                color: 'var(--primary)',
-                padding: '2px 8px',
-                borderRadius: '99px',
-                fontWeight: 700
-              }}>i18n 13-Lang</span>
+        {/* Brand Logo & Ecosystem Badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}
+            onClick={() => setActiveTab('roadmap')}
+          >
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent-purple) 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'
+            }}>
+              <Rocket size={22} />
             </div>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('subtitle')}</p>
+            <div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <span>StepOne</span>
+                <span style={{ color: 'var(--primary)', fontWeight: 700 }}>Career</span>
+                <span style={{
+                  fontSize: '0.65rem',
+                  background: 'var(--primary-light)',
+                  color: 'var(--primary)',
+                  padding: '2px 8px',
+                  borderRadius: '99px',
+                  fontWeight: 700
+                }}>i18n 13-Lang</span>
+              </div>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('subtitle')}</p>
+            </div>
           </div>
+
+          {/* Sister Platform Link: StepOne College */}
+          <a
+            href="https://college.steponecareer.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Switch to StepOne College - US University Search & Admissions Platform for High Schoolers & Parents"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              background: 'rgba(99, 102, 241, 0.08)',
+              border: '1px solid rgba(99, 102, 241, 0.25)',
+              color: 'var(--primary)',
+              padding: '4px 10px',
+              borderRadius: '99px',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              textDecoration: 'none',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <span>🎓 StepOne College</span>
+            <span style={{ fontSize: '0.68rem', opacity: 0.75 }}>↗</span>
+          </a>
         </div>
 
         {/* Navigation Pills */}
@@ -334,6 +387,28 @@ export default function Header({ activeTab, setActiveTab, currentLang, setCurren
               </div>
             )}
           </div>
+
+          {/* Install PWA App Button */}
+          <button
+            onClick={handleInstallApp}
+            title="Install StepOne Career as a Desktop or Mobile App"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.45rem 0.75rem',
+              borderRadius: 'var(--radius-md)',
+              background: 'rgba(79, 70, 229, 0.08)',
+              border: '1px solid rgba(79, 70, 229, 0.25)',
+              color: 'var(--primary)',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            <Download size={14} />
+            <span className="hidden-mobile">App</span>
+          </button>
 
           {/* Reset Progress Button (归零重置) */}
           <button

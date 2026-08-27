@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StepOne Career | AI Companion for Job Seekers (US Target)</title>
+    <meta name="description" content="Minimalist AI career companion for international students & fresh graduates in the US. Generate ATS-ready English CVs, Cover Letters, LinkedIn Headshots & H-1B Visa checks in 1 click." />
+
+    <!-- Open Graph / Social Sharing -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="StepOne Career" />
+    <meta property="og:title" content="StepOne Career | AI Companion for Job Seekers" />
+    <meta property="og:description" content="Launch your first US career. ATS-ready English CVs, Cover Letters, LinkedIn Headshots & H-1B visa checks in one click." />
+    <meta property="og:url" content="https://steponecareer.com/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="StepOne Career | AI Companion for Job Seekers" />
+    <meta name="twitter:description" content="Launch your first US career. ATS-ready English CVs, Cover Letters, LinkedIn Headshots & H-1B visa checks in one click." />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- PWA Links -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#4F46E5" />
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW reg failed: ', err));
+        });
+      }
+    </script>
+  </body>
+</html>

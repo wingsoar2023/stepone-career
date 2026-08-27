@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+
+# Environment
+.env
+.env.local
+
+# Netlify local state
+.netlify/
+
+# Playwright MCP artifacts
+.playwright-mcp/

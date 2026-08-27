@@ -9,12 +9,20 @@ import ApplicationTracker from './components/ApplicationTracker';
 import CareerMentor from './components/CareerMentor';
 import AuthModal from './components/AuthModal';
 import PaywallModal from './components/PaywallModal';
+import LegalModal from './components/LegalModal';
 import { AuthProvider } from './context/AuthContext';
 import { QuotaProvider } from './context/QuotaContext';
 
 function MainApp() {
   const [activeTab, setActiveTab] = useState('roadmap');
   const [currentLang, setCurrentLang] = useState('en');
+  const [showLegalModal, setShowLegalModal] = useState(false);
+  const [legalTab, setLegalTab] = useState('privacy');
+
+  const openLegal = (tab) => {
+    setLegalTab(tab);
+    setShowLegalModal(true);
+  };
   const [profileData, setProfileData] = useState(() => {
     try {
       const saved = localStorage.getItem('stepone_profile');
@@ -147,15 +155,97 @@ function MainApp() {
 
       <AuthModal />
       <PaywallModal />
+      <LegalModal
+        isOpen={showLegalModal}
+        onClose={() => setShowLegalModal(false)}
+        initialTab={legalTab}
+      />
 
       <footer style={{
         textAlign: 'center',
-        padding: '1.5rem',
+        padding: '2.25rem 1.5rem',
         borderTop: '1px solid var(--border-light)',
         color: 'var(--text-muted)',
         fontSize: '0.8rem',
         background: 'white'
       }}>
+        {/* StepOne Suite Ecosystem Links */}
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '1rem',
+          padding: '0.5rem 1.25rem',
+          borderRadius: '99px',
+          background: 'var(--bg-main)',
+          border: '1px solid var(--border-light)',
+          marginBottom: '1rem',
+          flexWrap: 'wrap',
+          justifyContent: 'center'
+        }}>
+          <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            StepOne Education Suite:
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 700, color: 'var(--text-main)' }}>
+            💼 StepOne Career <span style={{ fontSize: '0.7rem', color: 'var(--accent-green)', fontWeight: 600 }}>(Job Search & ATS)</span>
+          </span>
+          <span style={{ color: 'var(--border-light)' }}>•</span>
+          <a
+            href="https://college.steponecareer.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Explore StepOne College - US University Finder & Admissions Companion"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              fontWeight: 700,
+              color: 'var(--primary)',
+              textDecoration: 'none'
+            }}
+          >
+            🎓 StepOne College <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>(US University Search)</span> ↗
+          </a>
+        </div>
+
+        {/* Legal & Compliance Quick Links */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '1.25rem',
+          flexWrap: 'wrap',
+          marginBottom: '0.85rem',
+          fontSize: '0.76rem'
+        }}>
+          <button
+            onClick={() => openLegal('privacy')}
+            style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
+          >
+            Privacy Policy
+          </button>
+          <span>•</span>
+          <button
+            onClick={() => openLegal('disclaimer')}
+            style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
+          >
+            Immigration & AI Disclaimer
+          </button>
+          <span>•</span>
+          <button
+            onClick={() => openLegal('terms')}
+            style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
+          >
+            Terms of Service
+          </button>
+          <span>•</span>
+          <button
+            onClick={() => openLegal('refund')}
+            style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
+          >
+            30-Day Refund Policy
+          </button>
+        </div>
+
         <p style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
           StepOne Career © 2026 · Operated by Clarity Clinical Solutions LLC
         </p>

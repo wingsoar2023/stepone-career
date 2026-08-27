@@ -68,10 +68,10 @@ export default function CareerMentor({ profileData, markStepDone, currentLang })
         reply = currentLang === 'zh'
           ? `礼貌回应签证赞助问题：\n"我目前拥有 F-1 OPT / STEM OPT 美国合法工作资格（最长 36 个月），短期内无需签证赞助。长期来看，随着我为团队创造价值，我非常欢迎 H-1B 赞助的机会。"`
           : `Polite Visa Sponsorship Response:\n"I am currently eligible to work in the US under F-1 OPT / STEM OPT for up to 36 months without requiring immediate visa sponsorship. In the long term, I welcome opportunities for H-1B sponsorship as I deliver impactful results to your team."`;
-      } else if (lower.includes('follow-up') || lower.includes('follow up')) {
+      } else if (lower.includes('grad school') || lower.includes('master') || lower.includes('college') || lower.includes('university') || textToSend.includes('读研') || textToSend.includes('研究生') || textToSend.includes('大学')) {
         reply = currentLang === 'zh'
-          ? `礼貌的跟进邮件模板：\n"尊敬的招聘负责人：我于 [日期] 提交了 [岗位] 的申请。我非常欣赏贵团队的工作，想询问一下申请进展。如需补充任何材料请随时告知。\n此致，[你的名字]"`
-          : `Polite Follow-up Template:\n"Dear [Hiring Manager], I submitted my application for the [Position] role on [Date]. I am very excited about your team's work and wanted to check in on the status of my application. Please let me know if you need any additional materials. Best regards, [Your Name]"`;
+          ? `如果在当前求职周期内面临 OPT 身份压力，申请美国研究生（Master's/MBA）或 STEM 认证项目是非常稳健的「二度起跑」策略。\n\n💡 探索高校与项目推荐：\n你可以访问我们的教育生态子平台 🎓 StepOne College (https://college.steponecareer.com)，一键搜寻全美大学院校、录取偏好与 STEM 专业！`
+          : `If you are facing OPT timeline pressure or exploring career transitions, pursuing a US Master's degree (STEM-certified) is a proven backup plan to reset your 36-month OPT clock.\n\n💡 Explore US Universities & Programs:\nYou can check out our companion platform 🎓 StepOne College (https://college.steponecareer.com) to search US universities, acceptance rates, and academic rankings!`;
       } else {
         reply = t('goldenRules');
       }
