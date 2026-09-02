@@ -1,0 +1,147 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    background: radial-gradient(circle at 50% 20%, #1e1b4b 0%, #0f172a 55%, #020617 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 100px 70px 0 70px;
+    position: relative;
+  }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(99, 102, 241, 0.2);
+    border: 1.5px solid rgba(129, 140, 248, 0.5);
+    color: #a5b4fc;
+    padding: 12px 28px;
+    border-radius: 99px;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-size: 66px;
+    font-weight: 900;
+    color: #ffffff;
+    text-align: center;
+    line-height: 1.15;
+    margin-bottom: 18px;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  h1 span {
+    background: linear-gradient(90deg, #38bdf8 0%, #818cf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  p.sub {
+    font-size: 32px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-align: center;
+    margin-bottom: 70px;
+  }
+  .phone-mockup {
+    width: 880px;
+    height: 1360px;
+    background: #ffffff;
+    border-radius: 54px 54px 0 0;
+    box-shadow: 0 -20px 80px rgba(0,0,0,0.6), 0 0 0 12px #334155;
+    padding: 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .h1b-banner {
+    background: #f0fdf4;
+    border: 2px solid #86efac;
+    border-radius: 24px;
+    padding: 22px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .h1b-title { font-size: 24px; font-weight: 800; color: #166534; }
+  .h1b-badge { background: #15803d; color: #fff; padding: 6px 16px; border-radius: 99px; font-size: 18px; font-weight: 800; }
+  .kanban-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .col-box {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 26px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .col-header { font-size: 20px; font-weight: 800; color: #475569; display: flex; justify-content: space-between; }
+  .job-card {
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .job-company { font-size: 22px; font-weight: 900; color: #0f172a; }
+  .job-role { font-size: 18px; font-weight: 600; color: #64748b; }
+  .job-tag { display: inline-flex; background: #e0e7ff; color: #4338ca; padding: 4px 10px; border-radius: 8px; font-size: 15px; font-weight: 700; width: fit-content; }
+  .offer-card {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 2px solid #10b981;
+    border-radius: 22px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+</style></head>
+<body>
+  <div class='tag'>💼 H-1B Intel &amp; Job Tracker</div>
+  <h1>Track Jobs &amp; <span>H-1B Sponsors</span></h1>
+  <p class='sub'>Verified US Department of Labor LCA filing history for target employers</p>
+  <div class='phone-mockup'>
+    <div class='h1b-banner'>
+      <div class='h1b-title'>🏛️ US DOL LCA Verified Database</div>
+      <div class='h1b-badge'>OPT / STEM Eligible</div>
+    </div>
+    <div class='kanban-grid'>
+      <div class='col-box'>
+        <div class='col-header'><span>INTERVIEWING (3)</span><span>⏳</span></div>
+        <div class='job-card'>
+          <div class='job-company'>Stripe</div>
+          <div class='job-role'>Product Analyst</div>
+          <div class='job-tag'>Top H-1B Sponsor</div>
+        </div>
+        <div class='job-card'>
+          <div class='job-company'>Amazon</div>
+          <div class='job-role'>Software Engineer I</div>
+          <div class='job-tag'>STEM OPT Friendly</div>
+        </div>
+      </div>
+      <div class='col-box'>
+        <div class='col-header'><span>OFFERS (1)</span><span>🎉</span></div>
+        <div class='offer-card'>
+          <div style='font-size:24px;font-weight:900;color:#065f46;'>🎉 Google</div>
+          <div style='font-size:20px;font-weight:700;color:#047857;'>Associate PM</div>
+          <div style='font-size:26px;font-weight:900;color:#059669;'>$128,000 / yr</div>
+          <div style='font-size:16px;font-weight:700;color:#065f46;'>H-1B Cap-Exempt &amp; E-Verify</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body></html>

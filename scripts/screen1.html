@@ -1,0 +1,150 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    background: radial-gradient(circle at 50% 20%, #1e1b4b 0%, #0f172a 55%, #020617 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 100px 70px 0 70px;
+    position: relative;
+  }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(99, 102, 241, 0.2);
+    border: 1.5px solid rgba(129, 140, 248, 0.5);
+    color: #a5b4fc;
+    padding: 12px 28px;
+    border-radius: 99px;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-size: 66px;
+    font-weight: 900;
+    color: #ffffff;
+    text-align: center;
+    line-height: 1.15;
+    margin-bottom: 18px;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  h1 span {
+    background: linear-gradient(90deg, #38bdf8 0%, #818cf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  p.sub {
+    font-size: 32px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-align: center;
+    margin-bottom: 70px;
+  }
+  .phone-mockup {
+    width: 880px;
+    height: 1360px;
+    background: #ffffff;
+    border-radius: 54px 54px 0 0;
+    box-shadow: 0 -20px 80px rgba(0,0,0,0.6), 0 0 0 12px #334155;
+    padding: 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .score-card {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 36px;
+    padding: 36px;
+    display: flex;
+    align-items: center;
+    gap: 36px;
+  }
+  .score-circle {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: conic-gradient(#10b981 0% 88%, #e2e8f0 88% 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px rgba(16,185,129,0.3);
+  }
+  .score-inner {
+    width: 124px;
+    height: 124px;
+    background: #fff;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .score-num { font-size: 46px; font-weight: 900; color: #10b981; line-height: 1; }
+  .score-label { font-size: 16px; font-weight: 700; color: #64748b; }
+  .kw-box { display: flex; flex-direction: column; gap: 14px; flex: 1; }
+  .badge-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .badge-g { background: #dcfce7; color: #15803d; border: 1px solid #86efac; padding: 8px 16px; border-radius: 12px; font-size: 20px; font-weight: 800; }
+  .badge-r { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; padding: 8px 16px; border-radius: 12px; font-size: 20px; font-weight: 800; }
+  .bullet-card {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 30px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .bullet-title { font-size: 24px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 10px; }
+  .bullet-text { font-size: 22px; color: #334155; line-height: 1.5; font-weight: 600; }
+  .btn-action {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    color: white;
+    padding: 24px;
+    border-radius: 24px;
+    text-align: center;
+    font-size: 26px;
+    font-weight: 800;
+    box-shadow: 0 12px 30px rgba(79,70,229,0.4);
+  }
+</style></head>
+<body>
+  <div class='tag'>🎯 ATS Resume Intelligence</div>
+  <h1>Instant <span>ATS Match</span> &amp; Bullets</h1>
+  <p class='sub'>Pinpoint gap keywords and craft quantified resume impact</p>
+  <div class='phone-mockup'>
+    <div class='score-card'>
+      <div class='score-circle'>
+        <div class='score-inner'>
+          <div class='score-num'>88%</div>
+          <div class='score-label'>MATCH</div>
+        </div>
+      </div>
+      <div class='kw-box'>
+        <div style='font-size:24px;font-weight:800;color:#0f172a;'>Associate PM · Google</div>
+        <div class='badge-row'>
+          <div class='badge-g'>✓ SQL &amp; Python</div>
+          <div class='badge-g'>✓ A/B Testing</div>
+          <div class='badge-r'>✕ Kafka</div>
+          <div class='badge-r'>✕ Agile Scrum</div>
+        </div>
+      </div>
+    </div>
+    <div class='bullet-card'>
+      <div class='bullet-title'>✨ AI Generated Impact Bullets (STAR)</div>
+      <div class='bullet-text'>• Led cross-functional sprint to build a real-time analytics dashboard in React &amp; SQL, increasing user onboarding retention by <strong>18.4%</strong>.</div>
+      <div class='bullet-text'>• Formulated multivariate A/B testing framework across 50,000+ active sessions, reducing funnel latency by <strong>320ms</strong>.</div>
+    </div>
+    <div class='btn-action'>🚀 Copy Tailored Bullets to Resume</div>
+  </div>
+</body></html>

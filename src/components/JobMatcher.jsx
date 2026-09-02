@@ -280,8 +280,22 @@ ${candidateName}`;
                 </div>
               </div>
 
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', background: 'var(--bg-main)', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
-                {t('visaCheckNote')} {t('visaDisclaimer')}
+              <div style={{
+                fontSize: '0.74rem',
+                color: 'var(--text-muted)',
+                background: 'var(--bg-main)',
+                padding: '0.75rem 0.9rem',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-light)',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.5rem',
+                lineHeight: 1.45
+              }}>
+                <ShieldCheck size={16} color="var(--primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div>
+                  <strong>Legal & Immigration Disclaimer:</strong> StepOne Career provides indicative data based on public U.S. Department of Labor (DOL) LCA filings. This does not constitute legal or immigration advice. Users should verify current sponsorship policies directly with employers and consult a licensed immigration attorney.
+                </div>
               </div>
 
               {/* Cover Letter Section */}

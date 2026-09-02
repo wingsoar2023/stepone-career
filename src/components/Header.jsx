@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Rocket, Globe, RotateCcw, Sparkles, User, LogOut, Zap, ShieldCheck, Download } from 'lucide-react';
+import { Rocket, Globe, RotateCcw, Sparkles, User, LogOut, Zap, ShieldCheck, Download, Trash2 } from 'lucide-react';
 import { getTranslation } from '../utils/i18n';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,7 +8,7 @@ export default function Header({ activeTab, setActiveTab, currentLang, setCurren
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
 
-  const { user, isLoggedIn, isPro, tier, logout, setShowAuthModal, triggerPaywall } = useAuth();
+  const { user, isLoggedIn, isPro, tier, logout, deleteAccount, setShowAuthModal, triggerPaywall } = useAuth();
   const t = (key) => getTranslation(currentLang, key);
 
   // Listen for PWA installation prompt
@@ -58,6 +58,21 @@ export default function Header({ activeTab, setActiveTab, currentLang, setCurren
   const handleResetClick = () => {
     if (window.confirm(t('confirmReset'))) {
       onResetAll();
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      "⚠️ DELETE ACCOUNT & DATA CONFIRMATION:\n\nAre you sure you want to permanently delete your account, resume profile, and all saved job tracker data?\n\nThis action is irreversible and complies with Google Play Account Deletion Policy."
+    );
+    if (confirmed) {
+      const res = await deleteAccount();
+      if (res?.error) {
+        alert("Could not delete account: " + (res.error.message || "Unknown error"));
+      } else {
+        alert("Your account and all personal data have been permanently deleted.");
+        setShowUserMenu(false);
+      }
     }
   };
 
@@ -266,13 +281,37 @@ export default function Header({ activeTab, setActiveTab, currentLang, setCurren
                       gap: '0.4rem',
                       background: 'transparent',
                       border: 'none',
-                      color: 'var(--accent-rose)',
+                      color: 'var(--text-main)',
                       fontSize: '0.8rem',
                       fontWeight: 600,
                       cursor: 'pointer'
                     }}
                   >
                     <LogOut size={14} /> Sign Out
+                  </button>
+
+                  <button
+                    onClick={handleDeleteAccount}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '0.5rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      background: 'transparent',
+                      borderTop: '1px solid var(--border-light)',
+                      borderLeft: 'none',
+                      borderRight: 'none',
+                      borderBottom: 'none',
+                      color: 'var(--accent-rose)',
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      marginTop: '0.25rem'
+                    }}
+                  >
+                    <Trash2 size={13} color="var(--accent-rose)" /> Delete Account & Data
                   </button>
                 </div>
               )}

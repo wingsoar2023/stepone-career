@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.steponecareer.app",
+        "sha256_cert_fingerprints": ["73:FE:61:F9:C6:01:B0:20:6E:6A:99:C4:C1:00:BE:62:DC:99:08:61:B1:EB:91:BF:4D:E9:E0:1C:44:29:6C:2A"]
+      }
+    }]

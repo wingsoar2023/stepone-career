@@ -164,6 +164,35 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('stepone_tier');
   };
 
+  // Google Play Compliance: Full Account & Personal Data Deletion
+  const deleteAccount = async () => {
+    if (!supabase || !user) {
+      return { error: { message: 'No active user session' } };
+    }
+    try {
+      // 1. Delete user record from database tables (RLS enforced)
+      await supabase.from('profiles').delete().eq('id', user.id);
+      await supabase.from('usage_tracking').delete().eq('user_id', user.id);
+      await supabase.from('applications').delete().eq('user_id', user.id);
+
+      // 2. Clear local storage
+      localStorage.removeItem('stepone_tier');
+      localStorage.removeItem('stepone_profile');
+      localStorage.removeItem('stepone_tracker_apps');
+
+      // 3. Sign out from Supabase
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      setTier('free');
+      return { success: true };
+    } catch (err) {
+      console.error('Error deleting account:', err);
+      return { error: err };
+    }
+  };
+
   // Upgrades current user to Pro (can be called by simulated payment or webhook sync)
   const upgradeToPro = async (planType = 'pro') => {
     setTier(planType);
@@ -199,6 +228,7 @@ export function AuthProvider({ children }) {
         loginWithEmail,
         signUpWithEmail,
         logout,
+        deleteAccount,
         upgradeToPro,
         isSupabaseConfigured
       }}
