@@ -175,7 +175,7 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
 
               <h5 style={{ fontWeight: 700, marginTop: '1rem', marginBottom: '0.35rem' }}>3. Your Rights & Data Deletion</h5>
               <p>
-                You retain full ownership of your data. You may export or permanently delete your profile, application history, and account at any time using the Reset button or by emailing <a href="mailto:clarityclinicalsolutions@gmail.com" style={{ color: 'var(--primary)' }}>clarityclinicalsolutions@gmail.com</a>.
+                You retain full ownership of your personal data. You may permanently delete your account, resume profile, and application history at any time directly in the app using the <strong>'Delete Account & Data'</strong> button in the top-right user menu, or by contacting our data protection officer at <a href="mailto:clarityclinicalsolutions@gmail.com" style={{ color: 'var(--primary)' }}>clarityclinicalsolutions@gmail.com</a>. Upon deletion, all associated database records in Supabase and local device storage are immediately and irreversibly purged.
               </p>
             </div>
           )}

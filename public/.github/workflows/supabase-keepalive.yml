@@ -1,0 +1,25 @@
+name: Supabase Keep Alive Trigger
+
+on:
+  schedule:
+    # Runs every Monday and Thursday at 00:00 UTC (every 3-4 days to prevent 7-day inactivity sleep)
+    - cron: '0 0 * * 1,4'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Database via Authenticated REST API
+        run: |
+          echo "Pinging Supabase Database to prevent inactivity pause..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X GET \
+            "https://fyfbtmcavpqwwhgabsol.supabase.co/rest/v1/profiles?select=count" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5ZmJ0bWNhdnBxd3doZ2Fic29sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MTgxNTEsImV4cCI6MjEwMzM5NDE1MX0.iHGvF213y9DC7G3r09o_UVtXg7qMwiV3sdsgTT_ReiM" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5ZmJ0bWNhdnBxd3doZ2Fic29sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MTgxNTEsImV4cCI6MjEwMzM5NDE1MX0.iHGvF213y9DC7G3r09o_UVtXg7qMwiV3sdsgTT_ReiM")
+          echo "Supabase Response HTTP Code: $response"
+          if [ "$response" -eq 200 ] || [ "$response" -eq 206 ] || [ "$response" -eq 401 ]; then
+            echo "Supabase database ping successful! (Activity recorded)"
+          else
+            echo "Warning: Received unexpected HTTP code: $response"
+          fi

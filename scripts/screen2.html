@@ -1,0 +1,148 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    background: radial-gradient(circle at 50% 20%, #1e1b4b 0%, #0f172a 55%, #020617 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 100px 70px 0 70px;
+    position: relative;
+  }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(99, 102, 241, 0.2);
+    border: 1.5px solid rgba(129, 140, 248, 0.5);
+    color: #a5b4fc;
+    padding: 12px 28px;
+    border-radius: 99px;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-size: 66px;
+    font-weight: 900;
+    color: #ffffff;
+    text-align: center;
+    line-height: 1.15;
+    margin-bottom: 18px;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  h1 span {
+    background: linear-gradient(90deg, #38bdf8 0%, #818cf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  p.sub {
+    font-size: 32px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-align: center;
+    margin-bottom: 70px;
+  }
+  .phone-mockup {
+    width: 880px;
+    height: 1360px;
+    background: #ffffff;
+    border-radius: 54px 54px 0 0;
+    box-shadow: 0 -20px 80px rgba(0,0,0,0.6), 0 0 0 12px #334155;
+    padding: 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .q-card {
+    background: #eef2ff;
+    border: 2px solid #c7d2fe;
+    border-radius: 28px;
+    padding: 28px;
+  }
+  .q-title { font-size: 26px; font-weight: 800; color: #3730a3; margin-bottom: 8px; }
+  .q-sub { font-size: 20px; color: #4338ca; font-weight: 600; }
+  .star-box {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .star-row {
+    background: #f8fafc;
+    border-left: 6px solid #4f46e5;
+    border-radius: 18px;
+    padding: 20px 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .star-letter {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #4f46e5;
+    color: white;
+    font-size: 22px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .star-desc { font-size: 20px; color: #1e293b; font-weight: 600; line-height: 1.45; }
+  .pitch-card {
+    background: #ecfdf5;
+    border: 2px solid #a7f3d0;
+    border-radius: 28px;
+    padding: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .pitch-left { display: flex; flex-direction: column; gap: 6px; }
+  .pitch-title { font-size: 24px; font-weight: 800; color: #065f46; }
+  .pitch-sub { font-size: 18px; color: #047857; font-weight: 600; }
+  .rec-btn {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: #10b981;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 8px 20px rgba(16,185,129,0.4);
+  }
+</style></head>
+<body>
+  <div class='tag'>🎤 Behavioral &amp; Speech Coach</div>
+  <h1>Master the <span>STAR Method</span></h1>
+  <p class='sub'>Generate customized interview cards &amp; practice 60s speech pitches</p>
+  <div class='phone-mockup'>
+    <div class='q-card'>
+      <div class='q-title'>Q: Tell me about a time you handled conflict.</div>
+      <div class='q-sub'>Targeting: Leadership &amp; Engineering Agility</div>
+    </div>
+    <div class='star-box'>
+      <div class='star-row'><div class='star-letter'>S</div><div class='star-desc'><strong>Situation:</strong> Team disagreed on database migration schema during tight 3-week deadline.</div></div>
+      <div class='star-row'><div class='star-letter'>T</div><div class='star-desc'><strong>Task:</strong> Align team on PostgreSQL schema without delaying deployment schedule.</div></div>
+      <div class='star-row'><div class='star-letter'>A</div><div class='star-desc'><strong>Action:</strong> Set up quick benchmark comparison matrix &amp; proposed hybrid RLS design.</div></div>
+      <div class='star-row'><div class='star-letter'>R</div><div class='star-desc'><strong>Result:</strong> Reached consensus in 24h and shipped release 2 days ahead of target.</div></div>
+    </div>
+    <div class='pitch-card'>
+      <div class='pitch-left'>
+        <div class='pitch-title'>🎙️ Speech Pitch Coach (Local AI)</div>
+        <div class='pitch-sub'>Live WPM Pace &amp; Filler Word Counter</div>
+      </div>
+      <div class='rec-btn'>▶</div>
+    </div>
+  </div>
+</body></html>
