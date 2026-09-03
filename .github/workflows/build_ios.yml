@@ -3,7 +3,7 @@ name: Build and Release iOS App
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - 'ios/**'
       - 'dist/**'
