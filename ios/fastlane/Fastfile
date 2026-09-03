@@ -1,0 +1,44 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+    # Setup CI environment
+    setup_ci
+
+    # Configure App Store Connect API Key
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
+      is_key_content_base64: ENV["APP_STORE_CONNECT_API_KEY_KEY"].to_s.include?("BEGIN PRIVATE KEY") ? false : true,
+      in_house: false
+    )
+
+    # Fetch certificates and profiles (reuse the shared Clarity Clinical Solutions distribution cert)
+    match(
+      type: "appstore",
+      readonly: false,
+      git_url: ENV["MATCH_GIT_URL"],
+      git_branch: "steponecareer",
+      app_identifier: "com.steponecareer.app",
+      api_key: api_key
+    )
+
+    # Build the application
+    build_app(
+      project: "App/App.xcodeproj",
+      scheme: "App",
+      export_method: "app-store",
+      clean: true
+    )
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true,
+      beta_app_description: "New beta version of StepOne Career.",
+      beta_app_feedback_email: "wingsoar2023@gmail.com"
+    )
+  end
+end

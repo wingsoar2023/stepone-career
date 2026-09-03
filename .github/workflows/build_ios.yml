@@ -1,0 +1,55 @@
+name: Build and Release iOS App
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'ios/**'
+      - 'dist/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - '.github/workflows/build_ios.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build & Upload to TestFlight
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies & Build Web
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_STRIPE_MONTHLY_URL: ${{ secrets.VITE_STRIPE_MONTHLY_URL }}
+          VITE_STRIPE_LIFETIME_URL: ${{ secrets.VITE_STRIPE_LIFETIME_URL }}
+        run: |
+          npm install
+          npm run build
+          npx cap sync ios
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: ios
+
+      - name: Build and Upload to TestFlight
+        working-directory: ios
+        env:
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_TOKEN: ${{ secrets.MATCH_GIT_TOKEN }}
+          MATCH_GIT_URL: "https://${{ secrets.MATCH_GIT_TOKEN }}@github.com/thehobbyists2022/campfind-signing.git"
+        run: bundle exec fastlane beta
