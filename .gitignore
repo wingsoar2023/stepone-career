@@ -24,3 +24,6 @@ Thumbs.db
 
 # Playwright MCP artifacts
 .playwright-mcp/
+
+# App Store upload artifacts (screenshots etc.)
+appstore_screenshots/
