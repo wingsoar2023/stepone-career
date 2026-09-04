@@ -15,33 +15,40 @@ jobs:
           SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
-          URL="${SUPABASE_URL:-https://fyfbtmcavpqwwhgabsol.supabase.co}"
-          KEY="${SUPABASE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5ZmJ0bWNhdnBxd3doZ2Fic29sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MTgxNTEsImV4cCI6MjEwMzM5NDE1MX0.iHGvF213y9DC7G3r09o_UVtXg7qMwiV3sdsgTT_ReiM}"
+          URL="${SUPABASE_URL:-https://stbxqprhssgnqdmajdkd.supabase.co}"
+          KEY="${SUPABASE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0YnhxcHJoc3NnbnFkbWFqZGtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3NzgzNjEsImV4cCI6MjA3OTM1NDM2MX0.JD_9nQCgr0GVi76ynvL8gAaQjmO6y9XQz7glQQfIWbQ}"
 
           echo "Pinging Supabase Database to keep instance active..."
-          endpoint="${URL}/rest/v1/profiles?select=count"
-          echo "Target: $endpoint"
+          echo "Target Supabase Host: $URL"
 
-          # Temporarily disable exit on error to capture curl failure details
           set +e
-          http_code=$(curl -s -S -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 20 -X GET \
-            "$endpoint" \
+          # 1. Ping Auth Service
+          auth_code=$(curl -s -S -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 20 -X GET \
+            "${URL}/auth/v1/health" \
+            -H "apikey: $KEY")
+          auth_exit=$?
+
+          # 2. Ping PostgREST Database API
+          db_code=$(curl -s -S -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 20 -X GET \
+            "${URL}/rest/v1/profiles?select=count" \
             -H "apikey: $KEY" \
             -H "Authorization: Bearer $KEY")
-          curl_exit=$?
+          db_exit=$?
           set -e
 
-          echo "Supabase Response HTTP Code: $http_code (curl exit: $curl_exit)"
+          echo "Auth API HTTP Code: $auth_code (curl exit: $auth_exit)"
+          echo "Database REST HTTP Code: $db_code (curl exit: $db_exit)"
 
-          if [ "$http_code" = "200" ] || [ "$http_code" = "206" ] || [ "$http_code" = "401" ]; then
-            echo "✅ Supabase database ping successful! (Activity recorded)"
+          # Status 200, 206, or 404 (table not yet created) all prove PostgREST & Postgres are active
+          if [ "$auth_code" -eq 200 ] || [ "$db_code" -eq 200 ] || [ "$db_code" -eq 404 ]; then
+            echo "✅ Supabase keep-alive ping successful! Database activity recorded."
           else
-            if [ "$curl_exit" -eq 6 ]; then
+            if [ "$auth_exit" -eq 6 ] || [ "$db_exit" -eq 6 ]; then
               echo "⚠️ Error: Could not resolve hostname ($URL)."
               echo "Your Supabase project may currently be PAUSED due to inactivity."
               echo "To resume: Open https://supabase.com/dashboard and click 'Restore project'."
             else
-              echo "⚠️ Warning: Received unexpected HTTP code: $http_code (exit code: $curl_exit)"
+              echo "⚠️ Warning: Received unexpected status codes (Auth: $auth_code, DB: $db_code)"
             fi
             exit 1
           fi
