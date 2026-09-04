@@ -11,15 +11,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Supabase Database via Authenticated REST API
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
-          echo "Pinging Supabase Database to prevent inactivity pause..."
-          response=$(curl -s -o /dev/null -w "%{http_code}" -X GET \
-            "https://fyfbtmcavpqwwhgabsol.supabase.co/rest/v1/profiles?select=count" \
-            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5ZmJ0bWNhdnBxd3doZ2Fic29sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MTgxNTEsImV4cCI6MjEwMzM5NDE1MX0.iHGvF213y9DC7G3r09o_UVtXg7qMwiV3sdsgTT_ReiM" \
-            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5ZmJ0bWNhdnBxd3doZ2Fic29sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MTgxNTEsImV4cCI6MjEwMzM5NDE1MX0.iHGvF213y9DC7G3r09o_UVtXg7qMwiV3sdsgTT_ReiM")
-          echo "Supabase Response HTTP Code: $response"
-          if [ "$response" -eq 200 ] || [ "$response" -eq 206 ] || [ "$response" -eq 401 ]; then
-            echo "Supabase database ping successful! (Activity recorded)"
+          URL="${SUPABASE_URL:-https://fyfbtmcavpqwwhgabsol.supabase.co}"
+          KEY="${SUPABASE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5ZmJ0bWNhdnBxd3doZ2Fic29sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MTgxNTEsImV4cCI6MjEwMzM5NDE1MX0.iHGvF213y9DC7G3r09o_UVtXg7qMwiV3sdsgTT_ReiM}"
+
+          echo "Pinging Supabase Database to keep instance active..."
+          endpoint="${URL}/rest/v1/profiles?select=count"
+          echo "Target: $endpoint"
+
+          # Temporarily disable exit on error to capture curl failure details
+          set +e
+          http_code=$(curl -s -S -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 20 -X GET \
+            "$endpoint" \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY")
+          curl_exit=$?
+          set -e
+
+          echo "Supabase Response HTTP Code: $http_code (curl exit: $curl_exit)"
+
+          if [ "$http_code" = "200" ] || [ "$http_code" = "206" ] || [ "$http_code" = "401" ]; then
+            echo "✅ Supabase database ping successful! (Activity recorded)"
           else
-            echo "Warning: Received unexpected HTTP code: $response"
+            if [ "$curl_exit" -eq 6 ]; then
+              echo "⚠️ Error: Could not resolve hostname ($URL)."
+              echo "Your Supabase project may currently be PAUSED due to inactivity."
+              echo "To resume: Open https://supabase.com/dashboard and click 'Restore project'."
+            else
+              echo "⚠️ Warning: Received unexpected HTTP code: $http_code (exit code: $curl_exit)"
+            fi
+            exit 1
           fi
