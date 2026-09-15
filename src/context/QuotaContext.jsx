@@ -27,7 +27,7 @@ const ACTION_DESCRIPTIONS = {
 };
 
 export function QuotaProvider({ children }) {
-  const { user, isPro, triggerPaywall } = useAuth();
+  const { user, tier, isPro, isIOS, triggerPaywall, isCloudUser } = useAuth();
   const currentMonthKey = new Date().toISOString().slice(0, 7); // e.g. '2026-08'
   const storageKey = `stepone_usage_${currentMonthKey}`;
 
@@ -40,9 +40,9 @@ export function QuotaProvider({ children }) {
     }
   });
 
-  // Sync with Supabase if logged in
+  // Sync with Supabase only for real authenticated users (demo/local users use local quota)
   useEffect(() => {
-    if (!supabase || !user) return;
+    if (!isCloudUser) return;
 
     const loadCloudUsage = async () => {
       try {
@@ -71,7 +71,7 @@ export function QuotaProvider({ children }) {
     };
 
     loadCloudUsage();
-  }, [user, currentMonthKey]);
+  }, [isCloudUser, user?.id, currentMonthKey]);
 
   const getUsageCount = (actionKey) => {
     return usage[actionKey] || 0;
@@ -80,7 +80,6 @@ export function QuotaProvider({ children }) {
   const getQuota = (actionKey) => {
     // Pro Tier: 300 / mo or infinite
     // Lifetime Tier: 150 / mo (Fair Use Policy protection)
-    const { tier } = useAuth();
     const isLifetime = tier === 'lifetime';
 
     if (isPro) {
@@ -111,20 +110,31 @@ export function QuotaProvider({ children }) {
     };
   };
 
+  // Accurate limit messaging: iOS has no purchase path, so quota blocks must state
+  // the exact limit and reset date instead of a silent no-op or a hidden paywall.
+  const notifyQuotaBlocked = (actionKey, isLifetime) => {
+    const desc = ACTION_DESCRIPTIONS[actionKey] || 'Free tier quota';
+    const resetInfo = 'Your quota resets on the 1st of next month.';
+    if (isLifetime) {
+      alert("You've reached the monthly Fair Use Policy ceiling of 150 requests. " + resetInfo);
+      return;
+    }
+    if (isIOS) {
+      alert(`You have reached your monthly limit for ${desc}. ${resetInfo}`);
+      return;
+    }
+    triggerPaywall(`You have reached your limit of ${desc}. Upgrade to Pro for unlimited access.`);
+  };
+
   // Consume 1 credit of the action. Returns true if allowed, false if blocked.
   const consumeQuota = async (actionKey) => {
-    // 1. If user is authenticated on Supabase, enforce atomic server-side RPC quota check
-    if (supabase && user) {
+    // 1. Real authenticated users: enforce atomic server-side RPC quota check
+    if (isCloudUser) {
       try {
         const { data, error } = await supabase.rpc('consume_user_quota', { p_action: actionKey });
         if (!error && data) {
           if (!data.allowed) {
-            if (data.tier === 'lifetime') {
-              alert("You've reached the monthly Fair Use Policy ceiling of 150 requests. Your quota resets on the 1st of next month.");
-            } else {
-              const desc = ACTION_DESCRIPTIONS[actionKey] || 'Free tier quota';
-              triggerPaywall(`You have reached your limit of ${desc}. Upgrade to Pro for unlimited access.`);
-            }
+            notifyQuotaBlocked(actionKey, data.tier === 'lifetime');
             return false;
           }
           // Update local mirror state
@@ -139,16 +149,11 @@ export function QuotaProvider({ children }) {
       }
     }
 
-    // 2. Guest / Offline mode fallback
+    // 2. Guest / Demo / Offline mode fallback
     const { isLimitReached, isLifetime } = getQuota(actionKey);
 
     if (isLimitReached) {
-      if (isLifetime) {
-        alert("You've reached the monthly Fair Use Policy ceiling of 150 requests. Your quota resets on the 1st of next month.");
-        return false;
-      }
-      const desc = ACTION_DESCRIPTIONS[actionKey] || 'Free tier quota';
-      triggerPaywall(`You have reached your limit of ${desc}. Upgrade to Pro for unlimited access.`);
+      notifyQuotaBlocked(actionKey, isLifetime);
       return false;
     }
 

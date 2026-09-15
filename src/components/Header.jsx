@@ -192,8 +192,8 @@ export default function Header({ activeTab, setActiveTab, currentLang, setCurren
         {/* Right Action Bar: Demo + Pro Upgrade + Auth + Lang + Reset */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', position: 'relative', flexWrap: 'wrap' }}>
           
-          {/* Pro Badge or Upgrade to Pro Button */}
-          {isPro || isIOS ? (
+          {/* Pro Badge or Upgrade to Pro Button (hidden on iOS: no purchase path in-app) */}
+          {isPro ? (
             <span style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -208,7 +208,7 @@ export default function Header({ activeTab, setActiveTab, currentLang, setCurren
             }}>
               <Zap size={14} /> {tier === 'lifetime' ? 'PRO LIFETIME' : 'PRO MEMBER'}
             </span>
-          ) : (
+          ) : !isIOS && (
             <button
               onClick={() => triggerPaywall('Unlock unlimited JD Matcher, ATS PDF exports, and interview preparation.')}
               style={{

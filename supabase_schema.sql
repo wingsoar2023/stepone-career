@@ -67,9 +67,11 @@ alter table public.subscriptions enable row level security;
 create policy "Users can view own profile" on public.profiles for select using (auth.uid() = id);
 create policy "Users can insert own profile" on public.profiles for insert with check (auth.uid() = id);
 create policy "Users can update own profile" on public.profiles for update using (auth.uid() = id);
+create policy "Users can delete own profile" on public.profiles for delete using (auth.uid() = id);
 
 create policy "Users can view own usage" on public.usage_tracking for select using (auth.uid() = user_id);
 create policy "Users can update own usage" on public.usage_tracking for all using (auth.uid() = user_id);
+create policy "Users can delete own usage" on public.usage_tracking for delete using (auth.uid() = user_id);
 
 create policy "Users can view own applications" on public.applications for select using (auth.uid() = user_id);
 create policy "Users can insert own applications" on public.applications for insert with check (auth.uid() = user_id);
@@ -156,3 +158,38 @@ begin
   );
 end;
 $$;
+
+-- ==============================================================================
+-- 6. Verified Account Deletion (Apple Guideline 5.1.1(v) / Guideline 4)
+-- Deletes the Auth user + all owned data (cascades via FK on delete cascade),
+-- callable only by the authenticated owner. The client checks the RPC result
+-- before clearing local state.
+-- ==============================================================================
+create or replace function public.delete_user_account()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_user_id uuid := auth.uid();
+begin
+  if v_user_id is null then
+    return jsonb_build_object('success', false, 'error', 'unauthenticated');
+  end if;
+
+  -- Business data cleanup (explicit for auditability; FK cascade also covers this)
+  delete from public.applications where user_id = v_user_id;
+  delete from public.usage_tracking where user_id = v_user_id;
+  delete from public.subscriptions where user_id = v_user_id;
+  delete from public.profiles where id = v_user_id;
+
+  -- Remove the Auth account itself (cascades auth.identities, auth.sessions)
+  delete from auth.users where id = v_user_id;
+
+  return jsonb_build_object('success', true);
+end;
+$$;
+
+revoke execute on function public.delete_user_account() from anon;
+grant execute on function public.delete_user_account() to authenticated;

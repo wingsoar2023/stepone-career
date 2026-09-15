@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { X, Shield, FileText, AlertTriangle, Scale, CheckCircle2, Lock } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) {
   const [activeTab, setActiveTab] = useState(initialTab);
+  const { isIOS } = useAuth();
 
   // Sync tab if initialTab changes when opening
   React.useEffect(() => {
@@ -229,11 +231,17 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
                 By accessing or using StepOne Career (steponecareer.com), you agree to be bound by these Terms of Service and all applicable federal and state laws of the United States. StepOne Career is owned and operated by Clarity Clinical Solutions LLC.
               </p>
 
-              <h5 style={{ fontWeight: 700, marginTop: '1rem', marginBottom: '0.35rem' }}>2. Subscription Plans & Fair Use Policy</h5>
+              <h5 style={{ fontWeight: 700, marginTop: '1rem', marginBottom: '0.35rem' }}>2. Plans & Fair Use Policy</h5>
               <ul style={{ paddingLeft: '1.2rem', marginBottom: '1rem' }}>
-                <li><strong>Free Tier:</strong> Includes 5 JD match analyses/mo, 3 STAR cards, 3 speech coaching runs, and 10 tracked applications.</li>
-                <li><strong>Pro Monthly ($7.99/mo):</strong> Recurring monthly subscription granting 300 AI runs/month, ATS PDF export, and full cloud synchronization. Cancelable anytime in 1 click.</li>
-                <li><strong>Pioneer Lifetime Access ($29.00 one-time):</strong> Grants perpetual access to Pro tools under a Fair Use Policy ceiling of 150 AI runs/month (resets on the 1st of every month). Restricted to individual personal use; automated scraping or sharing accounts is prohibited.</li>
+                <li><strong>Free Tier:</strong> Includes 5 JD match analyses/mo, 3 STAR cards, 3 speech coaching runs, and 10 tracked applications. Unused credits reset on the 1st of each month.</li>
+                {isIOS ? (
+                  <li><strong>iOS App:</strong> The StepOne Career iOS app is available free of charge with the Free Tier limits above. Paid subscription features are offered only on our website (steponecareer.com) and are not purchasable within the iOS app.</li>
+                ) : (
+                  <>
+                    <li><strong>Pro Monthly ($7.99/mo):</strong> Recurring monthly subscription granting 300 AI runs/month, ATS PDF export, and full cloud synchronization. Cancelable anytime in 1 click.</li>
+                    <li><strong>Pioneer Lifetime Access ($29.00 one-time):</strong> Grants perpetual access to Pro tools under a Fair Use Policy ceiling of 150 AI runs/month (resets on the 1st of every month). Restricted to individual personal use; automated scraping or sharing accounts is prohibited.</li>
+                  </>
+                )}
               </ul>
 
               <h5 style={{ fontWeight: 700, marginTop: '1rem', marginBottom: '0.35rem' }}>3. Disclaimer of Warranties & Limitation of Liability</h5>
