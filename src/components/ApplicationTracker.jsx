@@ -17,7 +17,7 @@ const jobBoards = [
 
 export default function ApplicationTracker({ profileData, currentLang }) {
   const t = (key) => getTranslation(currentLang, key);
-  const { user, isLoggedIn, isPro, triggerPaywall, setShowAuthModal } = useAuth();
+  const { user, isCloudUser, isPro, triggerPaywall, setShowAuthModal } = useAuth();
   const { getQuota } = useQuota();
   const [showJobBoards, setShowJobBoards] = useState(true);
 
@@ -57,9 +57,9 @@ export default function ApplicationTracker({ profileData, currentLang }) {
     }
   });
 
-  // Fetch from Supabase if logged in
+  // Fetch from Supabase only for real authenticated users (demo/local users stay local)
   useEffect(() => {
-    if (!supabase || !user) return;
+    if (!isCloudUser) return;
 
     const fetchCloudApps = async () => {
       try {
@@ -79,7 +79,7 @@ export default function ApplicationTracker({ profileData, currentLang }) {
     };
 
     fetchCloudApps();
-  }, [user]);
+  }, [isCloudUser, user?.id]);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [newCompany, setNewCompany] = useState('');
@@ -119,8 +119,8 @@ export default function ApplicationTracker({ profileData, currentLang }) {
     
     saveApplications([newItem, ...applications]);
 
-    // Async sync to Supabase if logged in
-    if (supabase && user) {
+    // Async sync to Supabase only for real authenticated users
+    if (isCloudUser) {
       supabase.from('applications').insert([{
         user_id: user.id,
         company: newCompany,
@@ -142,7 +142,7 @@ export default function ApplicationTracker({ profileData, currentLang }) {
       const updated = applications.filter(a => a.id !== id);
       saveApplications(updated);
 
-      if (supabase && user && typeof id !== 'number') {
+      if (isCloudUser && typeof id !== 'number') {
         supabase.from('applications').delete().eq('id', id).then();
       }
     }
@@ -152,7 +152,7 @@ export default function ApplicationTracker({ profileData, currentLang }) {
     const updated = applications.map(a => a.id === id ? { ...a, status: newStat } : a);
     saveApplications(updated);
 
-    if (supabase && user && typeof id !== 'number') {
+    if (isCloudUser && typeof id !== 'number') {
       supabase.from('applications').update({ status: newStat }).eq('id', id).then();
     }
   };
@@ -220,9 +220,13 @@ OPT / STEM OPT Eligible`;
             </p>
 
             <div style={{ marginTop: '0.6rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.78rem' }}>
-              {isLoggedIn ? (
+              {isCloudUser ? (
                 <span style={{ color: 'var(--accent-green)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                   <Cloud size={14} /> Cloud Sync Active ({user?.email})
+                </span>
+              ) : user ? (
+                <span style={{ color: 'var(--text-muted)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <HardDrive size={14} /> Demo Mode — data stored on this device only
                 </span>
               ) : (
                 <button

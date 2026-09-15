@@ -9,7 +9,6 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [tier, setTier] = useState(() => {
-    if (isNativeIOS()) return 'pro';
     return localStorage.getItem('stepone_tier') || 'free';
   });
   const [loading, setLoading] = useState(true);
@@ -78,11 +77,12 @@ export function AuthProvider({ children }) {
     });
 
     // 2. Listen to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // Note: no awaited Supabase calls inside this callback (deadlock risk per Supabase docs)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        await loadUserProfile(session.user.id);
+        loadUserProfile(session.user.id);
       } else {
         setProfile(null);
       }
@@ -90,37 +90,38 @@ export function AuthProvider({ children }) {
     });
 
     // 3. Handle Stripe Payment Return Redirect (?payment=success&tier=pro|lifetime)
+    // Only trusted on the web build with a real authenticated session; tier must be a whitelisted value.
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('payment') === 'success') {
-      const paidTier = urlParams.get('tier') || 'pro';
-      setTier(paidTier);
-      localStorage.setItem('stepone_tier', paidTier);
+    if (urlParams.get('payment') === 'success' && !isNativeIOS()) {
+      const requestedTier = urlParams.get('tier');
+      const paidTier = requestedTier === 'lifetime' ? 'lifetime' : 'pro';
 
-      // Sync with Supabase profile if session exists
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) {
+          setTier(paidTier);
+          localStorage.setItem('stepone_tier', paidTier);
+
           supabase
             .from('profiles')
             .update({ tier: paidTier })
             .eq('id', session.user.id)
             .then();
+
+          try {
+            if (typeof window.confetti === 'function') {
+              window.confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
+            }
+          } catch (e) {}
+
+          setTimeout(() => {
+            alert(`🎉 Payment Successful! Welcome to StepOne Career ${paidTier === 'lifetime' ? 'Pioneer Lifetime' : 'Pro'}! All premium features are now unlocked.`);
+          }, 500);
         }
       });
 
-      // Clean up URL query parameters
+      // Clean up URL query parameters so the grant can't be replayed via URL
       const cleanUrl = window.location.origin + window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
-
-      // Trigger Celebration
-      try {
-        if (typeof window.confetti === 'function') {
-          window.confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
-        }
-      } catch (e) {}
-
-      setTimeout(() => {
-        alert(`🎉 Payment Successful! Welcome to StepOne Career ${paidTier === 'lifetime' ? 'Pioneer Lifetime' : 'Pro'}! All premium features are now unlocked.`);
-      }, 500);
     }
 
     return () => {
@@ -142,14 +143,11 @@ export function AuthProvider({ children }) {
     if (error) alert(error.message);
   };
 
-  // Apple Guideline 2.1 Demo Account support
-  const isReviewerAccount = (e, p) => {
+  // App Store Guideline 2.1: Demo mode is a separate, explicitly labeled flow.
+  // Entry requires this EXACT credential pair; any other credentials go through real Supabase auth.
+  const isDemoCredentials = (e, p) => {
     const cleanEmail = (e || '').trim().toLowerCase();
-    return (
-      cleanEmail === 'alex.chen@berkeley.edu' ||
-      cleanEmail === 'reviewer@steponecareer.com' ||
-      p === 'Reviewer2026!'
-    );
+    return cleanEmail === 'alex.chen@berkeley.edu' && p === 'Reviewer2026!';
   };
 
   const loginAsDemoReviewer = () => {
@@ -168,51 +166,40 @@ export function AuthProvider({ children }) {
   };
 
   const loginWithEmail = async (email, password) => {
-    if (isReviewerAccount(email, password)) {
+    if (isDemoCredentials(email, password)) {
       return loginAsDemoReviewer();
     }
     if (!supabase) {
-      const localUser = { id: 'user_alex_2026', email, isLocal: true };
-      localStorage.setItem('stepone_local_user', JSON.stringify(localUser));
-      setUser(localUser);
-      return { data: { user: localUser }, error: null };
+      return { error: { message: 'Sign-in is temporarily unavailable. Please try again later.' } };
     }
     try {
       const res = await supabase.auth.signInWithPassword({ email, password });
       if (res.error) {
-        const localUser = { id: 'user_alex_2026', email, isLocal: true };
-        localStorage.setItem('stepone_local_user', JSON.stringify(localUser));
-        setUser(localUser);
-        return { data: { user: localUser }, error: null };
+        return { error: res.error };
       }
       return res;
     } catch (err) {
-      const localUser = { id: 'user_alex_2026', email, isLocal: true };
-      localStorage.setItem('stepone_local_user', JSON.stringify(localUser));
-      setUser(localUser);
-      return { data: { user: localUser }, error: null };
+      return { error: { message: err?.message || 'Network error. Please check your connection and try again.' } };
     }
   };
 
   const signUpWithEmail = async (email, password) => {
     if (!supabase) {
-      const localUser = { id: 'user_alex_2026', email, isLocal: true };
-      localStorage.setItem('stepone_local_user', JSON.stringify(localUser));
-      setUser(localUser);
-      return { data: { user: localUser }, error: null };
+      return { error: { message: 'Sign-up is temporarily unavailable. Please try again later.' } };
     }
-    const res = await supabase.auth.signUp({ email, password });
-    if (res.error) {
-      const localUser = { id: 'user_alex_2026', email, isLocal: true };
-      localStorage.setItem('stepone_local_user', JSON.stringify(localUser));
-      setUser(localUser);
-      return { data: { user: localUser }, error: null };
+    try {
+      const res = await supabase.auth.signUp({ email, password });
+      if (res.error) {
+        return { error: res.error };
+      }
+      return res;
+    } catch (err) {
+      return { error: { message: err?.message || 'Network error. Please check your connection and try again.' } };
     }
-    return res;
   };
 
   const logout = async () => {
-    if (supabase) {
+    if (supabase && session) {
       await supabase.auth.signOut();
     }
     setUser(null);
@@ -220,29 +207,42 @@ export function AuthProvider({ children }) {
     setProfile(null);
     setTier('free');
     localStorage.removeItem('stepone_tier');
+    localStorage.removeItem('stepone_local_user');
   };
 
   // App Store & Privacy Compliance: Full Account & Personal Data Deletion
+  // Deletes the Supabase Auth account + all cloud data via a security-definer RPC,
+  // verifies results, then clears local state. Errors are surfaced, never swallowed.
   const deleteAccount = async () => {
     if (!user) {
       return { error: { message: 'No active user session' } };
     }
     try {
-      // 1. Delete user record from database tables if Supabase user
-      if (supabase && user?.id && !user?.isLocal) {
-        await supabase.from('profiles').delete().eq('id', user.id);
-        await supabase.from('usage_tracking').delete().eq('user_id', user.id);
-        await supabase.from('applications').delete().eq('user_id', user.id);
+      if (supabase && session && !user?.isDemo) {
+        // 1. Server-side verified deletion (cascades to profiles, usage, applications, subscriptions)
+        const { data: rpcData, error: rpcError } = await supabase.rpc('delete_user_account');
+        if (rpcError) {
+          return { error: rpcError };
+        }
+        if (rpcData && rpcData.success === false) {
+          return { error: { message: rpcData.error || 'Account deletion failed on the server.' } };
+        }
+
+        // 2. Sign out (server-side deletion already invalidated the account)
         await supabase.auth.signOut();
       }
 
-      // 2. Clear all local data
+      // 3. Clear all local data only after cloud deletion confirmed (or for demo/local accounts)
       localStorage.removeItem('stepone_tier');
       localStorage.removeItem('stepone_profile');
       localStorage.removeItem('stepone_tracker_apps');
       localStorage.removeItem('stepone_completed');
       localStorage.removeItem('stepone_applications');
       localStorage.removeItem('stepone_local_user');
+
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith('stepone_usage_'))
+        .forEach((key) => localStorage.removeItem(key));
 
       setUser(null);
       setSession(null);
@@ -259,7 +259,7 @@ export function AuthProvider({ children }) {
   const upgradeToPro = async (planType = 'pro') => {
     setTier(planType);
     localStorage.setItem('stepone_tier', planType);
-    if (supabase && user) {
+    if (supabase && session && !user?.isDemo) {
       await supabase
         .from('profiles')
         .update({ tier: planType })
@@ -268,7 +268,8 @@ export function AuthProvider({ children }) {
     setShowPaywallModal(false);
   };
 
-  const isPro = isNativeIOS() || tier === 'pro' || tier === 'lifetime';
+  const isPro = tier === 'pro' || tier === 'lifetime';
+  const isCloudUser = Boolean(supabase && session && user && !user.isDemo && !user.isLocal);
 
   return (
     <AuthContext.Provider
@@ -278,6 +279,7 @@ export function AuthProvider({ children }) {
         profile,
         tier,
         isPro,
+        isCloudUser,
         isIOS: isNativeIOS(),
         isLoggedIn: Boolean(user),
         loading,
