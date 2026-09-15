@@ -10,10 +10,11 @@ import CareerMentor from './components/CareerMentor';
 import AuthModal from './components/AuthModal';
 import PaywallModal from './components/PaywallModal';
 import LegalModal from './components/LegalModal';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { QuotaProvider } from './context/QuotaContext';
 
 function MainApp() {
+  const { isIOS } = useAuth();
   const [activeTab, setActiveTab] = useState('roadmap');
   const [currentLang, setCurrentLang] = useState('en');
   const [showLegalModal, setShowLegalModal] = useState(false);
@@ -237,20 +238,26 @@ function MainApp() {
           >
             Terms of Service
           </button>
-          <span>•</span>
-          <button
-            onClick={() => openLegal('refund')}
-            style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
-          >
-            30-Day Refund Policy
-          </button>
+          {!isIOS && (
+            <>
+              <span>•</span>
+              <button
+                onClick={() => openLegal('refund')}
+                style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
+              >
+                30-Day Refund Policy
+              </button>
+            </>
+          )}
         </div>
 
         <p style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
           StepOne Career © 2026 · Operated by Clarity Clinical Solutions LLC
         </p>
         <p style={{ fontSize: '0.75rem' }}>
-          AI Career Companion for International Students (F-1 / OPT / STEM OPT) & US New Grads · All payments securely processed via Stripe
+          {isIOS
+            ? 'AI Career Companion for International Students (F-1 / OPT / STEM OPT) & US New Grads · iOS Edition'
+            : 'AI Career Companion for International Students (F-1 / OPT / STEM OPT) & US New Grads · All payments securely processed via Stripe'}
         </p>
       </footer>
     </div>

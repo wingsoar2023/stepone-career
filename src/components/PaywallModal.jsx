@@ -6,11 +6,12 @@ const STRIPE_MONTHLY_URL = import.meta.env.VITE_STRIPE_MONTHLY_URL || 'https://b
 const STRIPE_LIFETIME_URL = import.meta.env.VITE_STRIPE_LIFETIME_URL || 'https://buy.stripe.com/14A7sL52T0tI900egI7ok01';
 
 export default function PaywallModal() {
-  const { showPaywallModal, setShowPaywallModal, paywallReason, upgradeToPro, isPro } = useAuth();
+  const { showPaywallModal, setShowPaywallModal, paywallReason, upgradeToPro, isPro, isIOS } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState('monthly'); // 'monthly' | 'lifetime'
   const [isProcessing, setIsProcessing] = useState(false);
 
-  if (!showPaywallModal) return null;
+  // Apple Guideline 3.1.1 Compliance: Completely disable paywall modal on iOS native app
+  if (!showPaywallModal || isIOS) return null;
 
   const handleCheckout = (plan) => {
     setIsProcessing(true);

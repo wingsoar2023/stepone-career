@@ -8,7 +8,7 @@ export default function Header({ activeTab, setActiveTab, currentLang, setCurren
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
 
-  const { user, isLoggedIn, isPro, tier, logout, deleteAccount, setShowAuthModal, triggerPaywall } = useAuth();
+  const { user, isLoggedIn, isPro, isIOS, tier, logout, deleteAccount, setShowAuthModal, triggerPaywall } = useAuth();
   const t = (key) => getTranslation(currentLang, key);
 
   // Listen for PWA installation prompt
@@ -63,7 +63,7 @@ export default function Header({ activeTab, setActiveTab, currentLang, setCurren
 
   const handleDeleteAccount = async () => {
     const confirmed = window.confirm(
-      "⚠️ DELETE ACCOUNT & DATA CONFIRMATION:\n\nAre you sure you want to permanently delete your account, resume profile, and all saved job tracker data?\n\nThis action is irreversible and complies with Google Play Account Deletion Policy."
+      "⚠️ DELETE ACCOUNT & DATA CONFIRMATION:\n\nAre you sure you want to permanently delete your account, resume profile, and all saved job tracker data?\n\nThis action is irreversible and permanently purges all personal data."
     );
     if (confirmed) {
       const res = await deleteAccount();
@@ -193,7 +193,7 @@ export default function Header({ activeTab, setActiveTab, currentLang, setCurren
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', position: 'relative', flexWrap: 'wrap' }}>
           
           {/* Pro Badge or Upgrade to Pro Button */}
-          {isPro ? (
+          {isPro || isIOS ? (
             <span style={{
               display: 'inline-flex',
               alignItems: 'center',
