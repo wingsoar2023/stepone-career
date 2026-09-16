@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Target, Sparkles, Copy, Download, Volume2, VolumeX, Printer, Edit3, Eye, ArrowRight, Building2, DollarSign, Check, Send, ChevronDown, ChevronUp, Lock } from 'lucide-react';
+import { Target, Sparkles, Copy, Download, Volume2, VolumeX, Printer, Edit3, Eye, ArrowRight, Building2, DollarSign, Check, Send, ChevronDown, ChevronUp, Lock, ShieldCheck } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { getTranslation } from '../utils/i18n';
 import { analyzeJdWithAi } from '../utils/ai';
