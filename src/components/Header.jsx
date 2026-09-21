@@ -206,7 +206,7 @@ export default function Header({ activeTab, setActiveTab, currentLang, setCurren
               fontSize: '0.78rem',
               fontWeight: 800
             }}>
-              <Zap size={14} /> {tier === 'lifetime' ? 'PRO LIFETIME' : 'PRO MEMBER'}
+              <Zap size={14} /> {user?.isDemo ? 'REVIEW DEMO' : tier === 'lifetime' ? 'PRO LIFETIME' : 'PRO MEMBER'}
             </span>
           ) : !isIOS && (
             <button

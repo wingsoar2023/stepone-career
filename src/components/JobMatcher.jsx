@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 export default function JobMatcher({ profileData, markStepDone, setActiveTab, currentLang }) {
   const t = (key) => getTranslation(currentLang, key);
   const { getQuota, consumeQuota } = useQuota();
-  const { isPro, triggerPaywall } = useAuth();
+  const { isPro, isIOS, triggerPaywall } = useAuth();
   const jdQuota = getQuota('jdAnalyses');
   const netQuota = getQuota('networkingMsg');
 
@@ -109,7 +109,11 @@ Qualifications:
   // Step 3: ATS Print to PDF (Pro Feature Gate)
   const handlePrintPdf = () => {
     if (!isPro) {
-      triggerPaywall('ATS Resume & Cover Letter PDF Export is available on StepOne Pro ($7.99/mo). Upgrade to download ready-to-submit PDFs.');
+      if (isIOS) {
+        alert('PDF export is not included in the free iOS edition. The free monthly quotas of this app (5 JD analyses, 3 STAR cards, 3 speech coaching sessions, 10 tracked applications) reset on the 1st of next month.');
+      } else {
+        triggerPaywall('ATS Resume & Cover Letter PDF Export is available on StepOne Pro ($7.99/mo). Upgrade to download ready-to-submit PDFs.');
+      }
       return;
     }
     window.print();

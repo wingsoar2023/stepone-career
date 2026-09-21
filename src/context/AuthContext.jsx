@@ -38,7 +38,8 @@ export function AuthProvider({ children }) {
 
       if (data) {
         setProfile(data);
-        const userTier = data.tier || 'free';
+        // iOS native build: the app runs entirely free — paid tiers are not recognized in-app.
+        const userTier = (data.tier && !isNativeIOS()) ? data.tier : 'free';
         setTier(userTier);
         localStorage.setItem('stepone_tier', userTier);
       } else if (error && error.code === 'PGRST116') {
@@ -268,7 +269,11 @@ export function AuthProvider({ children }) {
     setShowPaywallModal(false);
   };
 
-  const isPro = tier === 'pro' || tier === 'lifetime';
+  // Pro badge logic:
+  // - Demo/reviewer session: local full-feature demo (badge shows "REVIEW DEMO", not a purchase claim)
+  // - Web: whatever tier the account actually holds
+  // - iOS native: free tier only — nothing is purchasable or unlockable in-app (App Store 3.1.1 / 2.1b)
+  const isPro = user?.isDemo ? true : (!isNativeIOS() && (tier === 'pro' || tier === 'lifetime'));
   const isCloudUser = Boolean(supabase && session && user && !user.isDemo && !user.isLocal);
 
   return (
