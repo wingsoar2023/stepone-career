@@ -1,9 +1,11 @@
 import React from 'react';
 import { UserCheck, Camera, Target, FileText, MessageSquare, ArrowRight, CheckCircle2, Sparkles, ShieldCheck } from 'lucide-react';
 import { getTranslation } from '../utils/i18n';
+import { useAuth } from '../context/AuthContext';
 
 export default function Roadmap({ setActiveTab, completedSteps = [], currentLang, onLoadDemo }) {
   const t = (key) => getTranslation(currentLang, key);
+  const { isIOS } = useAuth();
 
   const steps = [
     {
@@ -55,6 +57,7 @@ export default function Roadmap({ setActiveTab, completedSteps = [], currentLang
 
   const progressPercent = Math.round((completedSteps.length / steps.length) * 100);
 
+  // iOS build shows the free-tier-only story: no paid-plan pricing or "Pro unlock" references in-app.
   const comparisonRows = [
     // Free tier limits
     { feature: 'JD Analyses / mo',       stepone: '✅ 5 free · ∞ Pro', jobscan: '✅ Paid only',  teal: '✅ Paid only',  loopcv: '✅ Paid only' },
@@ -72,6 +75,12 @@ export default function Roadmap({ setActiveTab, completedSteps = [], currentLang
     { feature: 'Free Plan',              stepone: '✅ No credit card', jobscan: '❌ Trial only', teal: '❌ Trial only', loopcv: '❌' },
     { feature: 'Pro Plan',               stepone: '✅ $7.99 / month',  jobscan: '$50/mo',         teal: '$29/mo',         loopcv: '$25/mo' },
   ];
+
+  const rowsForPlatform = isIOS
+    ? comparisonRows
+        .filter((r) => r.feature !== 'Pro Plan')
+        .map((r) => ({ ...r, stepone: r.stepone.replace(' · ∞ Pro', '') }))
+    : comparisonRows;
 
   const renderCell = (value) => {
     if (value.startsWith('✅')) return <span style={{ color: 'var(--accent-green)', fontWeight: 700 }}>{value}</span>;
@@ -267,7 +276,7 @@ export default function Roadmap({ setActiveTab, completedSteps = [], currentLang
             </tr>
           </thead>
           <tbody>
-            {comparisonRows.map((row, i) => (
+            {rowsForPlatform.map((row, i) => (
               <tr key={i} style={{ background: i % 2 === 1 ? 'var(--bg-main)' : 'white' }}>
                 <td style={{ padding: '0.65rem 0.75rem', borderBottom: '1px solid var(--border-light)', fontWeight: 600 }}>{row.feature}</td>
                 <td style={{ padding: '0.65rem 0.75rem', borderBottom: '1px solid var(--border-light)', background: 'var(--primary-light)', fontWeight: 700 }}>{renderCell(row.stepone)}</td>

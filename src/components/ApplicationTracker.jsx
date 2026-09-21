@@ -17,7 +17,7 @@ const jobBoards = [
 
 export default function ApplicationTracker({ profileData, currentLang }) {
   const t = (key) => getTranslation(currentLang, key);
-  const { user, isCloudUser, isPro, triggerPaywall, setShowAuthModal } = useAuth();
+  const { user, isCloudUser, isPro, isIOS, triggerPaywall, setShowAuthModal } = useAuth();
   const { getQuota } = useQuota();
   const [showJobBoards, setShowJobBoards] = useState(true);
 
@@ -99,7 +99,11 @@ export default function ApplicationTracker({ profileData, currentLang }) {
 
   const handleOpenAddModal = () => {
     if (!isPro && applications.length >= 10) {
-      triggerPaywall('Free plan allows up to 10 tracked job applications. Upgrade to Pro for unlimited submissions.');
+      if (isIOS) {
+        alert('Free plan is limited to 10 active tracked applications. Remove one, or your free quota resets on the 1st of next month.');
+      } else {
+        triggerPaywall('Free plan allows up to 10 tracked job applications. Upgrade to Pro for unlimited submissions.');
+      }
       return;
     }
     setShowAddModal(true);

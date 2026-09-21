@@ -127,9 +127,10 @@ export function QuotaProvider({ children }) {
   };
 
   // Consume 1 credit of the action. Returns true if allowed, false if blocked.
+  // iOS native always uses local free-tier accounting (the iOS app has no paid tiers).
   const consumeQuota = async (actionKey) => {
-    // 1. Real authenticated users: enforce atomic server-side RPC quota check
-    if (isCloudUser) {
+    // 1. Real authenticated users (web only): enforce atomic server-side RPC quota check
+    if (isCloudUser && !isIOS) {
       try {
         const { data, error } = await supabase.rpc('consume_user_quota', { p_action: actionKey });
         if (!error && data) {
