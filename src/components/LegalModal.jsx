@@ -235,7 +235,7 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
               <ul style={{ paddingLeft: '1.2rem', marginBottom: '1rem' }}>
                 <li><strong>Free Tier:</strong> Includes 5 JD match analyses/mo, 3 STAR cards, 3 speech coaching runs, and 10 tracked applications. Unused credits reset on the 1st of each month.</li>
                 {isIOS ? (
-                  <li><strong>iOS App:</strong> The StepOne Career iOS app is available free of charge with the Free Tier limits above. Paid subscription features are offered only on our website (steponecareer.com) and are not purchasable within the iOS app.</li>
+                  <li><strong>iOS App:</strong> The StepOne Career iOS app includes the Free Tier limits above. Unused credits reset on the 1st of each month. Nothing is purchasable or unlocked within the iOS app.</li>
                 ) : (
                   <>
                     <li><strong>Pro Monthly ($7.99/mo):</strong> Recurring monthly subscription granting 300 AI runs/month, ATS PDF export, and full cloud synchronization. Cancelable anytime in 1 click.</li>

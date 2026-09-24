@@ -24,6 +24,14 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>StepOne Career uses your camera to take a selfie for the LinkedIn Headshot Generator, which adds studio-style lighting and a professional background to your profile photo.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>StepOne Career accesses your photo library so you can choose an existing selfie to enhance for your professional profile headshot.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>StepOne Career saves your generated professional headshot to your photo library so you can upload it to LinkedIn.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>StepOne Career uses the microphone during the 60-second pitch practice feature so you can record and review your spoken intro.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
