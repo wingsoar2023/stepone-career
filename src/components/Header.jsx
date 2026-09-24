@@ -8,7 +8,7 @@ export default function Header({ activeTab, setActiveTab, currentLang, setCurren
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
 
-  const { user, isLoggedIn, isPro, isIOS, tier, logout, deleteAccount, setShowAuthModal, triggerPaywall } = useAuth();
+  const { user, isLoggedIn, isPro, tier, logout, deleteAccount, setShowAuthModal, triggerPaywall } = useAuth();
   const t = (key) => getTranslation(currentLang, key);
 
   // Listen for PWA installation prompt
@@ -192,7 +192,7 @@ export default function Header({ activeTab, setActiveTab, currentLang, setCurren
         {/* Right Action Bar: Demo + Pro Upgrade + Auth + Lang + Reset */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', position: 'relative', flexWrap: 'wrap' }}>
           
-          {/* Pro Badge or Upgrade to Pro Button (hidden on iOS: no purchase path in-app) */}
+          {/* Pro Badge or Upgrade button (iOS purchase goes through Apple In-App Purchase) */}
           {isPro ? (
             <span style={{
               display: 'inline-flex',
@@ -208,7 +208,7 @@ export default function Header({ activeTab, setActiveTab, currentLang, setCurren
             }}>
               <Zap size={14} /> {user?.isDemo ? 'REVIEW DEMO' : tier === 'lifetime' ? 'PRO LIFETIME' : 'PRO MEMBER'}
             </span>
-          ) : !isIOS && (
+          ) : (
             <button
               onClick={() => triggerPaywall('Unlock unlimited JD Matcher, ATS PDF exports, and interview preparation.')}
               style={{

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { isNativeIOS } from '../lib/platform';
+import { checkProEntitlement } from '../lib/iap';
 
 const AuthContext = createContext({});
 
@@ -18,10 +19,9 @@ export function AuthProvider({ children }) {
   const [showPaywallModal, setShowPaywallModal] = useState(false);
   const [paywallReason, setPaywallReason] = useState('');
 
-  // Open paywall with a custom reason (e.g. "You've reached your 5 free JD analyses this month")
+  // Open paywall with a reason.
+  // Web: Stripe checkout modal. iOS: StoreKit (Apple In-App Purchase) via the same modal.
   const triggerPaywall = (reason = '') => {
-    // Guideline 3.1.1 Compliance: Never show Stripe paywall modal on iOS native app
-    if (isNativeIOS()) return;
     setPaywallReason(reason);
     setShowPaywallModal(true);
   };
@@ -38,8 +38,9 @@ export function AuthProvider({ children }) {
 
       if (data) {
         setProfile(data);
-        // iOS native build: the app runs entirely free — paid tiers are not recognized in-app.
-        const userTier = (data.tier && !isNativeIOS()) ? data.tier : 'free';
+        // Tier is stored server-side and is shared between web (Stripe) and iOS (Apple IAP).
+        // Since Apple IAP is now available in-app, a web-purchased tier also applies on iOS (3.1.3(b)).
+        const userTier = data.tier || 'free';
         setTier(userTier);
         localStorage.setItem('stepone_tier', userTier);
       } else if (error && error.code === 'PGRST116') {
@@ -76,6 +77,19 @@ export function AuthProvider({ children }) {
       }
       setLoading(false);
     });
+
+    // 1b. Restore Apple In-App Purchase entitlements (covers reinstalls and device-only purchases).
+    // Deferred with setTimeout so no native/SDK call runs inside the auth callback path.
+    if (isNativeIOS()) {
+      setTimeout(() => {
+        checkProEntitlement().then((active) => {
+          if (active) {
+            setTier('pro');
+            localStorage.setItem('stepone_tier', 'pro');
+          }
+        });
+      }, 1200);
+    }
 
     // 2. Listen to auth state changes
     // Note: no awaited Supabase calls inside this callback (deadlock risk per Supabase docs)
@@ -269,11 +283,10 @@ export function AuthProvider({ children }) {
     setShowPaywallModal(false);
   };
 
-  // Pro badge logic:
+  // Pro logic:
   // - Demo/reviewer session: local full-feature demo (badge shows "REVIEW DEMO", not a purchase claim)
-  // - Web: whatever tier the account actually holds
-  // - iOS native: free tier only — nothing is purchasable or unlockable in-app (App Store 3.1.1 / 2.1b)
-  const isPro = user?.isDemo ? true : (!isNativeIOS() && (tier === 'pro' || tier === 'lifetime'));
+  // - Everyone else: the tier actually held by the account (web Stripe or Apple IAP — both stored server-side)
+  const isPro = user?.isDemo ? true : (tier === 'pro' || tier === 'lifetime');
   const isCloudUser = Boolean(supabase && session && user && !user.isDemo && !user.isLocal);
 
   return (

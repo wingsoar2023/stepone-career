@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Check, Sparkles, ShieldCheck, Zap, Award, Star, CreditCard, Users, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { isIapAvailable, getIapOfferings, purchaseIapPackage } from '../lib/iap';
 
 const STRIPE_MONTHLY_URL = import.meta.env.VITE_STRIPE_MONTHLY_URL || 'https://buy.stripe.com/eVq28r0MDb8mekk1tW7ok00';
 const STRIPE_LIFETIME_URL = import.meta.env.VITE_STRIPE_LIFETIME_URL || 'https://buy.stripe.com/14A7sL52T0tI900egI7ok01';
@@ -9,9 +10,44 @@ export default function PaywallModal() {
   const { showPaywallModal, setShowPaywallModal, paywallReason, upgradeToPro, isPro, isIOS } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState('monthly'); // 'monthly' | 'lifetime'
   const [isProcessing, setIsProcessing] = useState(false);
+  const [iapPackages, setIapPackages] = useState([]);
+  const [iapError, setIapError] = useState('');
 
-  // Apple Guideline 3.1.1 Compliance: Completely disable paywall modal on iOS native app
-  if (!showPaywallModal || isIOS) return null;
+  useEffect(() => {
+    if (showPaywallModal && isIOS && isIapAvailable()) {
+      setIapError('');
+      getIapOfferings().then((pkgs) => {
+        setIapPackages(pkgs);
+        if (pkgs.length === 0) setIapError('Store items are being configured. Please try again in a few minutes.');
+      });
+    }
+  }, [showPaywallModal, isIOS]);
+
+  // iOS renders its own StoreKit purchase flow (Guideline 3.1.1 compliant)
+  if (!showPaywallModal) return null;
+
+  const handleIapPurchase = async () => {
+    const pkg = iapPackages.find((p) =>
+      selectedPlan === 'lifetime'
+        ? p.productId?.includes('lifetime') || p.period === 'ANNUAL'
+        : p.productId === 'com.steponecareer.pro.monthly' || p.period === 'MONTHLY'
+    ) || iapPackages[0];
+    if (!pkg) {
+      setIapError('Store item is unavailable. Please try again shortly.');
+      return;
+    }
+    setIsProcessing(true);
+    setIapError('');
+    const res = await purchaseIapPackage(pkg.id);
+    setIsProcessing(false);
+    if (res.cancelled) return;
+    if (!res.success) {
+      setIapError(res.error?.message || 'Purchase could not be completed.');
+      return;
+    }
+    await upgradeToPro(selectedPlan === 'lifetime' ? 'lifetime' : 'pro');
+    setShowPaywallModal(false);
+  };
 
   const handleCheckout = (plan) => {
     setIsProcessing(true);
@@ -250,29 +286,69 @@ export default function PaywallModal() {
           <span>Built with feedback from international students in r/F1Visa & r/cscareerquestions · Free to try, no credit card needed.</span>
         </div>
 
-        {/* CTA Button */}
-        <button
-          onClick={() => handleCheckout(selectedPlan)}
-          disabled={isProcessing}
-          className="btn-primary"
-          style={{
-            width: '100%',
-            justifyContent: 'center',
-            padding: '0.85rem',
-            fontSize: '0.95rem',
-            fontWeight: 800,
-            background: selectedPlan === 'lifetime' ? 'linear-gradient(135deg, #059669, #10B981)' : 'var(--primary)'
-          }}
-        >
-          {isProcessing ? (
-            'Redirecting to Secure Checkout...'
-          ) : (
-            <>
-              <CreditCard size={18} />
-              {selectedPlan === 'lifetime' ? 'Claim My Pioneer Spot · $29 One-Time' : 'Start Pro for $7.99 / month'}
-            </>
-          )}
-        </button>
+        {/* CTA Button — iOS uses Apple In-App Purchase (StoreKit); web uses Stripe redirect */}
+        {isIOS && (
+          <>
+            {iapError && (
+              <div style={{
+                background: 'rgba(244, 63, 94, 0.08)',
+                color: 'var(--accent-rose)',
+                padding: '0.5rem 0.75rem',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.8rem',
+                marginBottom: '0.75rem'
+              }}>
+                {iapError}
+              </div>
+            )}
+            <button
+              onClick={handleIapPurchase}
+              disabled={isProcessing || iapPackages.length === 0}
+              className="btn-primary"
+              style={{
+                width: '100%',
+                justifyContent: 'center',
+                padding: '0.85rem',
+                fontSize: '0.95rem',
+                fontWeight: 800,
+                background: selectedPlan === 'lifetime' ? 'linear-gradient(135deg, #059669, #10B981)' : 'var(--primary)'
+              }}
+            >
+              {isProcessing
+                ? 'Waiting for App Store...'
+                : iapPackages.find((p) => (selectedPlan === 'lifetime' ? p.period === 'ANNUAL' : p.period === 'MONTHLY'))?.priceString
+                  ? `${selectedPlan === 'lifetime' ? 'Claim My Pioneer Spot' : 'Start Pro'} · ${iapPackages.find((p) => (selectedPlan === 'lifetime' ? p.period === 'ANNUAL' : p.period === 'MONTHLY')).priceString}`
+                  : 'Purchase via App Store'}
+            </button>
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', textAlign: 'center', marginTop: '0.5rem' }}>
+              Payment is charged to your Apple ID and managed by the App Store. Subscriptions auto-renew unless cancelled at least 24 hours before the end of the period. Manage or cancel anytime in your Apple ID settings.
+            </p>
+          </>
+        )}
+        {!isIOS && (
+          <button
+            onClick={() => handleCheckout(selectedPlan)}
+            disabled={isProcessing}
+            className="btn-primary"
+            style={{
+              width: '100%',
+              justifyContent: 'center',
+              padding: '0.85rem',
+              fontSize: '0.95rem',
+              fontWeight: 800,
+              background: selectedPlan === 'lifetime' ? 'linear-gradient(135deg, #059669, #10B981)' : 'var(--primary)'
+            }}
+          >
+            {isProcessing ? (
+              'Redirecting to Secure Checkout...'
+            ) : (
+              <>
+                <CreditCard size={18} />
+                {selectedPlan === 'lifetime' ? 'Claim My Pioneer Spot · $29 One-Time' : 'Start Pro for $7.99 / month'}
+              </>
+            )}
+          </button>
+        )}
 
         {/* Guarantees & Security */}
         <div style={{
