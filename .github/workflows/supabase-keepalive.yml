@@ -2,8 +2,10 @@ name: Supabase Keep Alive Trigger
 
 on:
   schedule:
-    # Runs every Monday and Thursday at 00:00 UTC (every 3-4 days to prevent 7-day inactivity sleep)
-    - cron: '0 0 * * 1,4'
+    # Daily at 03:17 UTC — Supabase free tier pauses after 7 days without API activity.
+    # Daily (not 2x/week) is intentional: GitHub Actions scheduled runs are known to
+    # be delayed or skipped entirely under load; daily keeps the worst-case gap < 2 days.
+    - cron: '17 3 * * *'
   workflow_dispatch: # Allows manual trigger from GitHub Actions tab
 
 jobs:
@@ -28,9 +30,9 @@ jobs:
             -H "apikey: $KEY")
           auth_exit=$?
 
-          # 2. Ping PostgREST Database API
+          # 2. Ping PostgREST Database API with a VALID query (real Postgres reads count as activity)
           db_code=$(curl -s -S -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 20 -X GET \
-            "${URL}/rest/v1/profiles?select=count" \
+            "${URL}/rest/v1/profiles?select=id&limit=1" \
             -H "apikey: $KEY" \
             -H "Authorization: Bearer $KEY")
           db_exit=$?
