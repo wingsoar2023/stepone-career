@@ -27,7 +27,7 @@ const ACTION_DESCRIPTIONS = {
 };
 
 export function QuotaProvider({ children }) {
-  const { user, tier, isPro, isIOS, triggerPaywall, isCloudUser } = useAuth();
+  const { user, tier, isPro, triggerPaywall, isCloudUser } = useAuth();
   const currentMonthKey = new Date().toISOString().slice(0, 7); // e.g. '2026-08'
   const storageKey = `stepone_usage_${currentMonthKey}`;
 
@@ -110,8 +110,8 @@ export function QuotaProvider({ children }) {
     };
   };
 
-  // Accurate limit messaging: iOS has no purchase path, so quota blocks must state
-  // the exact limit and reset date instead of a silent no-op or a hidden paywall.
+  // Quota limit messaging. Every platform now has a purchase path
+  // (web = Stripe, iOS = Apple In-App Purchase), so blocked actions open the paywall.
   const notifyQuotaBlocked = (actionKey, isLifetime) => {
     const desc = ACTION_DESCRIPTIONS[actionKey] || 'Free tier quota';
     const resetInfo = 'Your quota resets on the 1st of next month.';
@@ -119,18 +119,13 @@ export function QuotaProvider({ children }) {
       alert("You've reached the monthly Fair Use Policy ceiling of 150 requests. " + resetInfo);
       return;
     }
-    if (isIOS) {
-      alert(`You have reached your monthly limit for ${desc}. ${resetInfo}`);
-      return;
-    }
     triggerPaywall(`You have reached your limit of ${desc}. Upgrade to Pro for unlimited access.`);
   };
 
   // Consume 1 credit of the action. Returns true if allowed, false if blocked.
-  // iOS native always uses local free-tier accounting (the iOS app has no paid tiers).
   const consumeQuota = async (actionKey) => {
-    // 1. Real authenticated users (web only): enforce atomic server-side RPC quota check
-    if (isCloudUser && !isIOS) {
+    // 1. Real authenticated users: enforce atomic server-side RPC quota check
+    if (isCloudUser) {
       try {
         const { data, error } = await supabase.rpc('consume_user_quota', { p_action: actionKey });
         if (!error && data) {

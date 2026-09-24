@@ -32,6 +32,7 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_STRIPE_MONTHLY_URL: ${{ secrets.VITE_STRIPE_MONTHLY_URL }}
           VITE_STRIPE_LIFETIME_URL: ${{ secrets.VITE_STRIPE_LIFETIME_URL }}
+          VITE_REVENUECAT_PUBLIC_KEY: ${{ secrets.VITE_REVENUECAT_PUBLIC_KEY }}
         run: |
           npm install
           npm run build

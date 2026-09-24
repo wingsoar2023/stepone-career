@@ -235,7 +235,10 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
               <ul style={{ paddingLeft: '1.2rem', marginBottom: '1rem' }}>
                 <li><strong>Free Tier:</strong> Includes 5 JD match analyses/mo, 3 STAR cards, 3 speech coaching runs, and 10 tracked applications. Unused credits reset on the 1st of each month.</li>
                 {isIOS ? (
-                  <li><strong>iOS App:</strong> The StepOne Career iOS app includes the Free Tier limits above. Unused credits reset on the 1st of each month. Nothing is purchasable or unlocked within the iOS app.</li>
+                  <>
+                    <li><strong>Pro Monthly ($7.99/mo):</strong> Auto-renewing monthly subscription purchased through the App Store (In-App Purchase). Grants 300 AI runs/month, ATS PDF export, and cloud sync. Payment is charged to your Apple ID. The subscription renews automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in your Apple ID account settings.</li>
+                    <li><strong>Pioneer Lifetime Access ($29.00 one-time):</strong> One-time purchase through the App Store granting perpetual access to Pro tools under a Fair Use Policy ceiling of 150 AI runs/month (resets on the 1st of each month).</li>
+                  </>
                 ) : (
                   <>
                     <li><strong>Pro Monthly ($7.99/mo):</strong> Recurring monthly subscription granting 300 AI runs/month, ATS PDF export, and full cloud synchronization. Cancelable anytime in 1 click.</li>
