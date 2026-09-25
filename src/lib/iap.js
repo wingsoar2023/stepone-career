@@ -24,6 +24,16 @@ async function getSdk() {
 
 export const isIapAvailable = () => Boolean(isNativeIOS() && RC_PUBLIC_KEY);
 
+// Pick the RevenueCat package that matches a UI plan ('monthly' | 'lifetime').
+// Matches by App Store product ID first, then falls back to the package period.
+export function pickPackage(packages, plan) {
+  return packages.find((p) =>
+    plan === 'lifetime'
+      ? p.productId?.includes('lifetime') || p.period === 'LIFETIME'
+      : p.productId === PRODUCT_IDS.monthly || p.period === 'MONTHLY'
+  ) || null;
+}
+
 export async function getIapOfferings() {
   const Purchases = await getSdk();
   if (!Purchases) return [];
