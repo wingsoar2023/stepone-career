@@ -42,7 +42,8 @@ export async function getIapOfferings() {
     const current = offerings?.current;
     if (!current) return [];
     return (current.availablePackages || [])
-      .filter((p) => p?.product?.identifier !== null)
+      // Only packages that actually have a linked App Store product are usable
+      .filter((p) => Boolean(p?.product?.identifier))
       .map((p) => ({
         id: p.identifier,
         productId: p.product.identifier,
