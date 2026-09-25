@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Sparkles, ShieldCheck, Zap, Award, Star, CreditCard, Users, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { isIapAvailable, getIapOfferings, purchaseIapPackage } from '../lib/iap';
+import { isIapAvailable, getIapOfferings, purchaseIapPackage, pickPackage } from '../lib/iap';
 
 const STRIPE_MONTHLY_URL = import.meta.env.VITE_STRIPE_MONTHLY_URL || 'https://buy.stripe.com/eVq28r0MDb8mekk1tW7ok00';
 const STRIPE_LIFETIME_URL = import.meta.env.VITE_STRIPE_LIFETIME_URL || 'https://buy.stripe.com/14A7sL52T0tI900egI7ok01';
@@ -27,11 +27,7 @@ export default function PaywallModal() {
   if (!showPaywallModal) return null;
 
   const handleIapPurchase = async () => {
-    const pkg = iapPackages.find((p) =>
-      selectedPlan === 'lifetime'
-        ? p.productId?.includes('lifetime') || p.period === 'ANNUAL'
-        : p.productId === 'com.steponecareer.pro.monthly' || p.period === 'MONTHLY'
-    ) || iapPackages[0];
+    const pkg = pickPackage(iapPackages, selectedPlan) || iapPackages[0];
     if (!pkg) {
       setIapError('Store item is unavailable. Please try again shortly.');
       return;
@@ -316,8 +312,8 @@ export default function PaywallModal() {
             >
               {isProcessing
                 ? 'Waiting for App Store...'
-                : iapPackages.find((p) => (selectedPlan === 'lifetime' ? p.period === 'ANNUAL' : p.period === 'MONTHLY'))?.priceString
-                  ? `${selectedPlan === 'lifetime' ? 'Claim My Pioneer Spot' : 'Start Pro'} · ${iapPackages.find((p) => (selectedPlan === 'lifetime' ? p.period === 'ANNUAL' : p.period === 'MONTHLY')).priceString}`
+                : pickPackage(iapPackages, selectedPlan)?.priceString
+                  ? `${selectedPlan === 'lifetime' ? 'Claim My Pioneer Spot' : 'Start Pro'} · ${pickPackage(iapPackages, selectedPlan).priceString}`
                   : 'Purchase via App Store'}
             </button>
             <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', textAlign: 'center', marginTop: '0.5rem' }}>
