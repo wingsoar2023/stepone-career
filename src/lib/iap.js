@@ -12,6 +12,8 @@ let initialized = false;
 
 async function getSdk() {
   if (!isNativeIOS()) return null;
+  // Guard: never configure the SDK with an empty key (would throw / crash on launch).
+  if (!RC_PUBLIC_KEY) return null;
   const { Purchases } = await import('@revenuecat/purchases-capacitor');
   if (!initialized) {
     await Purchases.configure({ apiKey: RC_PUBLIC_KEY });
