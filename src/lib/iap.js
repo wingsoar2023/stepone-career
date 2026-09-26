@@ -16,7 +16,7 @@ const PRODUCT_TYPE = {
 };
 
 // Bumped on every IAP-related build so the paywall can show which binary is running.
-export const IAP_BUILD_TAG = 'b16';
+export const IAP_BUILD_TAG = 'b17';
 
 const withTimeout = (promise, ms, label) =>
   Promise.race([
