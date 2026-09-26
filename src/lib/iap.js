@@ -16,7 +16,7 @@ const PRODUCT_TYPE = {
 };
 
 // Bumped on every IAP-related build so the paywall can show which binary is running.
-export const IAP_BUILD_TAG = 'b15';
+export const IAP_BUILD_TAG = 'b16';
 
 const withTimeout = (promise, ms, label) =>
   Promise.race([
@@ -122,49 +122,47 @@ export async function restoreIapPurchases() {
   }
 }
 
-// Diagnostics shown inside the paywall so failures are never silent.
-export async function diagnoseIap() {
-  const steps = [];
+// Diagnostics: reports progress step by step via onStep so the paywall can show partial
+// results even if a later step never settles (that is exactly the failure we are chasing).
+export async function diagnoseIap(onStep = () => {}) {
+  const push = (text) => onStep(text);
+
+  push(`ios=${isNativeIOS()}`);
+
+  // What native plugins did Capacitor actually register?
   try {
-    steps.push(IAP_BUILD_TAG);
-    steps.push(`ios=${isNativeIOS()}`);
+    const cap = globalThis.Capacitor;
+    const registered = cap?.Plugins ? Object.keys(cap.Plugins) : [];
+    push(`plugins=[${registered.join(',')}]`);
+  } catch (e) {
+    push('plugins=?');
+  }
 
-    // 1. What native plugins did Capacitor actually register?
-    try {
-      const cap = globalThis.Capacitor;
-      const registered = cap?.Plugins ? Object.keys(cap.Plugins) : [];
-      steps.push(`plugins=[${registered.join(',')}]`);
-    } catch (e) {
-      steps.push('plugins=?');
-    }
+  // Does the JS<->native bridge round-trip at all? (static import of a first-party plugin)
+  try {
+    const { Preferences } = await import('@capacitor/preferences');
+    push('prefs-import=ok');
+    await Preferences.set({ key: 'iapdiag', value: 'ok' });
+    const got = await Preferences.get({ key: 'iapdiag' });
+    push(`bridge=${got?.value === 'ok' ? 'ok' : 'bad'}`);
+  } catch (e) {
+    push('bridge=FAIL:' + String(e?.message || e).slice(0, 70));
+  }
 
-    // 2. Does a first-party plugin round-trip work? (tests the JS<->native bridge)
-    try {
-      const { Preferences } = await import('@capacitor/preferences');
-      await withTimeout(Preferences.set({ key: 'iapdiag', value: 'ok' }), 5000, 'prefs.set');
-      const got = await withTimeout(Preferences.get({ key: 'iapdiag' }), 5000, 'prefs.get');
-      steps.push(`bridge=${got?.value === 'ok' ? 'ok' : 'bad'}`);
-    } catch (e) {
-      steps.push('bridge=FAIL:' + String(e?.message || e).slice(0, 60));
-    }
-
+  try {
     const NP = await getPlugin();
     if (!NP) {
-      steps.push('plugin=null');
-      return steps.join(' | ');
+      push('plugin=null');
+      return;
     }
-    steps.push('plugin=ok');
-    const supported = await withTimeout(NP.isBillingSupported(), 8000, 'isBillingSupported').catch(() => null);
-    if (supported) steps.push(`billing=${supported.isBillingSupported}`);
-    const { products } = await withTimeout(
-      NP.getProducts({ productIdentifiers: [PRODUCT_IDS.monthly, PRODUCT_IDS.lifetime] }),
-      12000,
-      'getProducts'
-    );
-    steps.push(`products=${(products || []).length}`);
-    return steps.join(' | ');
+    push('plugin=ok');
+    const supported = await NP.isBillingSupported().catch(() => null);
+    if (supported) push(`billing=${supported.isBillingSupported}`);
+    const { products } = await NP.getProducts({
+      productIdentifiers: [PRODUCT_IDS.monthly, PRODUCT_IDS.lifetime]
+    });
+    push(`products=${(products || []).length}`);
   } catch (err) {
-    steps.push('FAIL: ' + String(err?.message || err));
-    return steps.join(' | ');
+    push('FAIL: ' + String(err?.message || err).slice(0, 70));
   }
 }
