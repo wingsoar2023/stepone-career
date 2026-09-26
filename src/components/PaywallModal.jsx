@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Sparkles, ShieldCheck, Zap, Award, Star, CreditCard, Users, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { isIapAvailable, getIapOfferings, purchaseIapPackage, pickPackage, diagnoseIap } from '../lib/iap';
+import { isIapAvailable, getIapOfferings, purchaseIapPackage, pickPackage, diagnoseIap, IAP_BUILD_TAG } from '../lib/iap';
 
 const STRIPE_MONTHLY_URL = import.meta.env.VITE_STRIPE_MONTHLY_URL || 'https://buy.stripe.com/eVq28r0MDb8mekk1tW7ok00';
 const STRIPE_LIFETIME_URL = import.meta.env.VITE_STRIPE_LIFETIME_URL || 'https://buy.stripe.com/14A7sL52T0tI900egI7ok01';
@@ -14,11 +14,13 @@ export default function PaywallModal() {
   const [iapError, setIapError] = useState('');
   const [iapStatus, setIapStatus] = useState('idle'); // idle | loading | ready | unavailable | error
   const [iapDiag, setIapDiag] = useState('');
+  const [iapRetry, setIapRetry] = useState(0);
 
   useEffect(() => {
     if (!showPaywallModal || !isIOS) return;
     setIapError('');
     setIapDiag('');
+    setIapPackages([]);
 
     if (!isIapAvailable()) {
       setIapStatus('unavailable');
@@ -39,7 +41,7 @@ export default function PaywallModal() {
         setIapPackages(pkgs);
         if (pkgs.length === 0) {
           setIapStatus('error');
-          setIapError('Could not load store items. Please try again in a few minutes.');
+          setIapError('Could not load store items. Please tap Retry.');
         } else {
           setIapStatus('ready');
         }
@@ -53,7 +55,7 @@ export default function PaywallModal() {
     return () => {
       cancelled = true;
     };
-  }, [showPaywallModal, isIOS]);
+  }, [showPaywallModal, isIOS, iapRetry]);
 
   // iOS renders its own StoreKit purchase flow (Guideline 3.1.1 compliant)
   if (!showPaywallModal) return null;
@@ -354,6 +356,22 @@ export default function PaywallModal() {
             <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', textAlign: 'center', marginTop: '0.5rem' }}>
               Payment is charged to your Apple ID and managed by the App Store. Subscriptions auto-renew unless cancelled at least 24 hours before the end of the period. Manage or cancel anytime in your Apple ID settings.
             </p>
+
+            {/* Build/status line: always visible so we can tell which binary is running */}
+            <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.5rem', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+              [{IAP_BUILD_TAG}] status={iapStatus}
+            </p>
+
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.35rem' }}>
+              <button
+                type="button"
+                onClick={() => setIapRetry((n) => n + 1)}
+                style={{ background: 'none', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-sm)', padding: '0.3rem 0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                Retry store check
+              </button>
+            </div>
+
             {iapDiag && (
               <p style={{ fontSize: '0.68rem', color: 'var(--text-light)', textAlign: 'center', marginTop: '0.35rem', fontFamily: 'monospace', wordBreak: 'break-all' }}>
                 {iapDiag}
