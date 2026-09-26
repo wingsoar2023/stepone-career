@@ -34,7 +34,7 @@ export default function PaywallModal() {
     }
     setIsProcessing(true);
     setIapError('');
-    const res = await purchaseIapPackage(pkg.id);
+    const res = await purchaseIapPackage(pkg.raw || pkg);
     setIsProcessing(false);
     if (res.cancelled) return;
     if (!res.success) {

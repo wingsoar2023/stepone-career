@@ -46,6 +46,8 @@ export async function getIapOfferings() {
       .filter((p) => Boolean(p?.product?.identifier))
       .map((p) => ({
         id: p.identifier,
+        // The RevenueCat SDK requires the original package object for purchasePackage()
+        raw: p,
         productId: p.product.identifier,
         title: p.product.title,
         description: p.product.description,
@@ -59,14 +61,15 @@ export async function getIapOfferings() {
   }
 }
 
-export async function purchaseIapPackage(packageIdentifier) {
+export async function purchaseIapPackage(pkg) {
   const Purchases = await getSdk();
   if (!Purchases) {
     return { success: false, error: { message: 'Purchases are not available in this app build.' } };
   }
   try {
-    const { purchaseResult } = await Purchases.purchasePackage({ aPackage: packageIdentifier });
-    return { success: Boolean(purchaseResult), purchase: purchaseResult };
+    // NOTE: the SDK expects the full package object here, not the identifier string.
+    const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
+    return { success: true, purchase: customerInfo };
   } catch (err) {
     if (String(err?.code).includes('userCancelled') || err?.userCancelled) {
       return { success: false, cancelled: true, error: null };
