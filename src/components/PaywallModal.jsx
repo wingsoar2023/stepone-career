@@ -22,7 +22,7 @@ export default function PaywallModal() {
 
     if (!isIapAvailable()) {
       setIapStatus('unavailable');
-      setIapError('In-app purchases are unavailable in this build (store key missing).');
+      setIapError('In-app purchases are unavailable in this build. Please update the app to the latest version.');
       return;
     }
 
