@@ -32,11 +32,37 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW reg failed: ', err));
+      // Service workers are for the web PWA only. Inside the Capacitor iOS WebView they
+      // intercept asset requests (including dynamically imported chunks) and never answer,
+      // which made every plugin/StoreKit call hang forever. Disable + clean up on native.
+      (function () {
+        var cap = window.Capacitor;
+        var isNative = !!(
+          cap &&
+          ((typeof cap.isNativePlatform === 'function' && cap.isNativePlatform()) ||
+            (typeof cap.getPlatform === 'function' && cap.getPlatform() !== 'web'))
+        );
+
+        if (!('serviceWorker' in navigator)) return;
+
+        if (isNative) {
+          try {
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+              regs.forEach(function (r) { r.unregister(); });
+            }).catch(function () {});
+            if (window.caches) {
+              caches.keys().then(function (keys) {
+                keys.forEach(function (k) { caches.delete(k); });
+              }).catch(function () {});
+            }
+          } catch (e) {}
+          return;
+        }
+
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').catch(function (err) { console.log('SW reg failed: ', err); });
         });
-      }
+      })();
     </script>
   </body>
 </html>
