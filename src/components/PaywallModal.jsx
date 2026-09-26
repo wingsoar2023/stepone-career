@@ -15,6 +15,13 @@ export default function PaywallModal() {
   const [iapStatus, setIapStatus] = useState('idle'); // idle | loading | ready | unavailable | error
   const [iapDiag, setIapDiag] = useState('');
   const [iapRetry, setIapRetry] = useState(0);
+  const [tick, setTick] = useState(0);
+
+  // Heartbeat: if this number stops increasing, the JS thread itself is blocked.
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 500);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (!showPaywallModal || !isIOS) return;
@@ -31,8 +38,8 @@ export default function PaywallModal() {
     setIapStatus('loading');
     let cancelled = false;
 
-    diagnoseIap().then((info) => {
-      if (!cancelled) setIapDiag(info);
+    diagnoseIap((text) => {
+      if (!cancelled) setIapDiag((prev) => (prev ? prev + ' | ' + text : text));
     });
 
     getIapOfferings()
@@ -370,7 +377,7 @@ export default function PaywallModal() {
               wordBreak: 'break-all',
               textAlign: 'center'
             }}>
-              [{IAP_BUILD_TAG}] status={iapStatus}
+              [{IAP_BUILD_TAG}] status={iapStatus} tick={tick}
               {iapDiag ? <div style={{ marginTop: '0.25rem' }}>{iapDiag}</div> : null}
             </div>
 
