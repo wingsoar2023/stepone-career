@@ -1,7 +1,10 @@
 import { isNativeIOS } from './platform';
 import { supabase } from './supabaseClient';
 
-const RC_PUBLIC_KEY = import.meta.env.VITE_REVENUECAT_PUBLIC_KEY || '';
+// RevenueCat PUBLIC SDK key (Apple). Public SDK keys are designed to be embedded in client
+// apps — security comes from the App Store plus RevenueCat's server-side secret key.
+// The env var (when provided) takes precedence so other environments can override it.
+const RC_PUBLIC_KEY = import.meta.env.VITE_REVENUECAT_PUBLIC_KEY || 'appl_sVnojduOQCixTrdnADTOsBLGVDo';
 
 const PRODUCT_IDS = {
   monthly: 'com.steponecareer.pro.monthly',

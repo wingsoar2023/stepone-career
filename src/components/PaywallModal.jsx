@@ -12,15 +12,43 @@ export default function PaywallModal() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [iapPackages, setIapPackages] = useState([]);
   const [iapError, setIapError] = useState('');
+  const [iapStatus, setIapStatus] = useState('idle'); // idle | loading | ready | unavailable | error
 
   useEffect(() => {
-    if (showPaywallModal && isIOS && isIapAvailable()) {
-      setIapError('');
-      getIapOfferings().then((pkgs) => {
-        setIapPackages(pkgs);
-        if (pkgs.length === 0) setIapError('Store items are being configured. Please try again in a few minutes.');
-      });
+    if (!showPaywallModal || !isIOS) return;
+    setIapError('');
+
+    if (!isIapAvailable()) {
+      setIapStatus('unavailable');
+      setIapError('In-app purchases are unavailable in this build (store key missing).');
+      return;
     }
+
+    setIapStatus('loading');
+    let cancelled = false;
+    const timeoutId = setTimeout(() => {
+      if (!cancelled) {
+        setIapStatus('error');
+        setIapError('Could not reach the App Store. Check your internet connection and reopen this window.');
+      }
+    }, 12000);
+
+    getIapOfferings().then((pkgs) => {
+      if (cancelled) return;
+      clearTimeout(timeoutId);
+      setIapPackages(pkgs);
+      if (pkgs.length === 0) {
+        setIapStatus('error');
+        setIapError('Could not load store items. Please try again in a few minutes.');
+      } else {
+        setIapStatus('ready');
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
   }, [showPaywallModal, isIOS]);
 
   // iOS renders its own StoreKit purchase flow (Guideline 3.1.1 compliant)
@@ -307,14 +335,17 @@ export default function PaywallModal() {
                 padding: '0.85rem',
                 fontSize: '0.95rem',
                 fontWeight: 800,
+                opacity: iapPackages.length === 0 ? 0.6 : 1,
                 background: selectedPlan === 'lifetime' ? 'linear-gradient(135deg, #059669, #10B981)' : 'var(--primary)'
               }}
             >
               {isProcessing
                 ? 'Waiting for App Store...'
-                : pickPackage(iapPackages, selectedPlan)?.priceString
-                  ? `${selectedPlan === 'lifetime' ? 'Claim My Pioneer Spot' : 'Start Pro'} · ${pickPackage(iapPackages, selectedPlan).priceString}`
-                  : 'Purchase via App Store'}
+                : iapStatus === 'loading'
+                  ? 'Checking App Store...'
+                  : pickPackage(iapPackages, selectedPlan)?.priceString
+                    ? `${selectedPlan === 'lifetime' ? 'Claim My Pioneer Spot' : 'Start Pro'} · ${pickPackage(iapPackages, selectedPlan).priceString}`
+                    : 'Purchase via App Store'}
             </button>
             <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', textAlign: 'center', marginTop: '0.5rem' }}>
               Payment is charged to your Apple ID and managed by the App Store. Subscriptions auto-renew unless cancelled at least 24 hours before the end of the period. Manage or cancel anytime in your Apple ID settings.
