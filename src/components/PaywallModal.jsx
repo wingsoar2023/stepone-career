@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Sparkles, ShieldCheck, Zap, Award, Star, CreditCard, Users, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { isIapAvailable, getIapOfferings, purchaseIapPackage, pickPackage, diagnoseIap, IAP_BUILD_TAG } from '../lib/iap';
+import { isIapAvailable, getIapOfferings, purchaseIapPackage, pickPackage, diagnoseIap, IAP_BUILD_TAG, iapLog } from '../lib/iap';
 
 const STRIPE_MONTHLY_URL = import.meta.env.VITE_STRIPE_MONTHLY_URL || 'https://buy.stripe.com/eVq28r0MDb8mekk1tW7ok00';
 const STRIPE_LIFETIME_URL = import.meta.env.VITE_STRIPE_LIFETIME_URL || 'https://buy.stripe.com/14A7sL52T0tI900egI7ok01';
@@ -400,6 +400,8 @@ export default function PaywallModal() {
             }}>
               [{IAP_BUILD_TAG}] status={iapStatus} tick={tick} session={sessionId} waited={elapsed}s
               {iapDiag ? <div style={{ marginTop: '0.25rem' }}>{iapDiag}</div> : null}
+              {/* Module-level execution log, re-read on every heartbeat render */}
+              <div style={{ marginTop: '0.25rem', color: 'var(--primary)' }}>{iapLog.join(' » ')}</div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.35rem' }}>
