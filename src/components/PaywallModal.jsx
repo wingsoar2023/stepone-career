@@ -358,9 +358,21 @@ export default function PaywallModal() {
             </p>
 
             {/* Build/status line: always visible so we can tell which binary is running */}
-            <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.5rem', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+            <div style={{
+              marginTop: '0.6rem',
+              padding: '0.5rem 0.65rem',
+              border: '1px dashed var(--border-light)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--bg-main)',
+              fontSize: '0.72rem',
+              color: 'var(--text-main)',
+              fontFamily: 'monospace',
+              wordBreak: 'break-all',
+              textAlign: 'center'
+            }}>
               [{IAP_BUILD_TAG}] status={iapStatus}
-            </p>
+              {iapDiag ? <div style={{ marginTop: '0.25rem' }}>{iapDiag}</div> : null}
+            </div>
 
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.35rem' }}>
               <button
@@ -371,12 +383,6 @@ export default function PaywallModal() {
                 Retry store check
               </button>
             </div>
-
-            {iapDiag && (
-              <p style={{ fontSize: '0.68rem', color: 'var(--text-light)', textAlign: 'center', marginTop: '0.35rem', fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                {iapDiag}
-              </p>
-            )}
           </>
         )}
         {!isIOS && (

@@ -16,7 +16,7 @@ const PRODUCT_TYPE = {
 };
 
 // Bumped on every IAP-related build so the paywall can show which binary is running.
-export const IAP_BUILD_TAG = 'b14';
+export const IAP_BUILD_TAG = 'b15';
 
 const withTimeout = (promise, ms, label) =>
   Promise.race([
@@ -128,6 +128,26 @@ export async function diagnoseIap() {
   try {
     steps.push(IAP_BUILD_TAG);
     steps.push(`ios=${isNativeIOS()}`);
+
+    // 1. What native plugins did Capacitor actually register?
+    try {
+      const cap = globalThis.Capacitor;
+      const registered = cap?.Plugins ? Object.keys(cap.Plugins) : [];
+      steps.push(`plugins=[${registered.join(',')}]`);
+    } catch (e) {
+      steps.push('plugins=?');
+    }
+
+    // 2. Does a first-party plugin round-trip work? (tests the JS<->native bridge)
+    try {
+      const { Preferences } = await import('@capacitor/preferences');
+      await withTimeout(Preferences.set({ key: 'iapdiag', value: 'ok' }), 5000, 'prefs.set');
+      const got = await withTimeout(Preferences.get({ key: 'iapdiag' }), 5000, 'prefs.get');
+      steps.push(`bridge=${got?.value === 'ok' ? 'ok' : 'bad'}`);
+    } catch (e) {
+      steps.push('bridge=FAIL:' + String(e?.message || e).slice(0, 60));
+    }
+
     const NP = await getPlugin();
     if (!NP) {
       steps.push('plugin=null');
