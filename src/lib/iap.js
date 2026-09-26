@@ -1,4 +1,7 @@
 import { isNativeIOS } from './platform';
+// STATIC import on purpose: dynamic import() of the plugin chunk never resolves inside
+// the Capacitor iOS WebView, which made every purchase call hang silently.
+import { NativePurchases } from '@capgo/native-purchases';
 
 // Apple In-App Purchase via StoreKit, using @capgo/native-purchases (direct StoreKit,
 // no third-party server in the purchase path).
@@ -12,31 +15,29 @@ const PRODUCT_TYPE = {
   [PRODUCT_IDS.lifetime]: 'inapp'
 };
 
-let pluginPromise = null;
+const withTimeout = (promise, ms, label) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(label + ' timed out')), ms))
+  ]);
 
 async function getPlugin() {
   if (!isNativeIOS()) return null;
-  if (!pluginPromise) {
-    pluginPromise = import('@capgo/native-purchases')
-      .then((mod) => mod.NativePurchases)
-      .catch((err) => {
-        pluginPromise = null;
-        throw err;
-      });
-  }
-  return pluginPromise;
+  return NativePurchases || null;
 }
 
 export const isIapAvailable = () => Boolean(isNativeIOS());
 
 // Returns the App Store products (same shape the paywall expects).
 export async function getIapOfferings() {
-  const NP = await getPlugin();
-  if (!NP) return [];
   try {
-    const { products } = await NP.getProducts({
-      productIdentifiers: [PRODUCT_IDS.monthly, PRODUCT_IDS.lifetime]
-    });
+    const NP = await getPlugin();
+    if (!NP) return [];
+    const { products } = await withTimeout(
+      NP.getProducts({ productIdentifiers: [PRODUCT_IDS.monthly, PRODUCT_IDS.lifetime] }),
+      12000,
+      'getProducts'
+    );
     return (products || []).map((p) => ({
       id: p.identifier,
       productId: p.identifier,
@@ -70,10 +71,10 @@ export async function purchaseIapPackage(pkg) {
     return { success: false, error: { message: 'Unknown product.' } };
   }
   try {
-    const transaction = await NP.purchaseProduct({
+    const transaction = await withTimeout(NP.purchaseProduct({
       productIdentifier: productId,
       productType: PRODUCT_TYPE[productId] || 'inapp'
-    });
+    }), 120000, 'purchase');
     return { success: Boolean(transaction?.transactionId || transaction), purchase: transaction };
   } catch (err) {
     const message = String(err?.message || err || '');
@@ -85,10 +86,14 @@ export async function purchaseIapPackage(pkg) {
 }
 
 async function hasProPurchase() {
-  const NP = await getPlugin();
-  if (!NP) return false;
   try {
-    const { purchases } = await NP.getPurchases({ onlyCurrentEntitlements: true });
+    const NP = await getPlugin();
+    if (!NP) return false;
+    const { purchases } = await withTimeout(
+      NP.getPurchases({ onlyCurrentEntitlements: true }),
+      12000,
+      'getPurchases'
+    );
     return (purchases || []).some((p) => {
       const id = p?.productIdentifier || p?.identifier;
       return id === PRODUCT_IDS.monthly || id === PRODUCT_IDS.lifetime;
@@ -102,12 +107,12 @@ async function hasProPurchase() {
 export const checkProEntitlement = hasProPurchase;
 
 export async function restoreIapPurchases() {
-  const NP = await getPlugin();
-  if (!NP) {
-    return { success: false, error: { message: 'Not available on this platform.' } };
-  }
   try {
-    await NP.restorePurchases();
+    const NP = await getPlugin();
+    if (!NP) {
+      return { success: false, error: { message: 'Not available on this platform.' } };
+    }
+    await withTimeout(NP.restorePurchases(), 60000, 'restorePurchases');
     return { success: await hasProPurchase() };
   } catch (err) {
     return { success: false, error: { message: String(err?.message || err) } };
@@ -125,11 +130,13 @@ export async function diagnoseIap() {
       return steps.join(' | ');
     }
     steps.push('plugin=ok');
-    const supported = await NP.isBillingSupported().catch(() => null);
+    const supported = await withTimeout(NP.isBillingSupported(), 8000, 'isBillingSupported').catch(() => null);
     if (supported) steps.push(`billing=${supported.isBillingSupported}`);
-    const { products } = await NP.getProducts({
-      productIdentifiers: [PRODUCT_IDS.monthly, PRODUCT_IDS.lifetime]
-    });
+    const { products } = await withTimeout(
+      NP.getProducts({ productIdentifiers: [PRODUCT_IDS.monthly, PRODUCT_IDS.lifetime] }),
+      12000,
+      'getProducts'
+    );
     steps.push(`products=${(products || []).length}`);
     return steps.join(' | ');
   } catch (err) {

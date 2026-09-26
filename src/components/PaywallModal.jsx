@@ -33,16 +33,22 @@ export default function PaywallModal() {
       if (!cancelled) setIapDiag(info);
     });
 
-    getIapOfferings().then((pkgs) => {
-      if (cancelled) return;
-      setIapPackages(pkgs);
-      if (pkgs.length === 0) {
+    getIapOfferings()
+      .then((pkgs) => {
+        if (cancelled) return;
+        setIapPackages(pkgs);
+        if (pkgs.length === 0) {
+          setIapStatus('error');
+          setIapError('Could not load store items. Please try again in a few minutes.');
+        } else {
+          setIapStatus('ready');
+        }
+      })
+      .catch((err) => {
+        if (cancelled) return;
         setIapStatus('error');
-        setIapError('Could not load store items. Please try again in a few minutes.');
-      } else {
-        setIapStatus('ready');
-      }
-    });
+        setIapError('Store error: ' + String(err?.message || err));
+      });
 
     return () => {
       cancelled = true;
