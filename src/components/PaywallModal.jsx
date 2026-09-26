@@ -16,6 +16,19 @@ export default function PaywallModal() {
   const [iapDiag, setIapDiag] = useState('');
   const [iapRetry, setIapRetry] = useState(0);
   const [tick, setTick] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+
+  // Session counter: increments on every page load. If it keeps climbing, the WebView is
+  // reloading itself (which would explain a request that never settles).
+  const [sessionId] = useState(() => {
+    try {
+      const n = Number(sessionStorage.getItem('iap_session') || '0') + 1;
+      sessionStorage.setItem('iap_session', String(n));
+      return n;
+    } catch (e) {
+      return -1;
+    }
+  });
 
   // Heartbeat: if this number stops increasing, the JS thread itself is blocked.
   useEffect(() => {
@@ -28,6 +41,7 @@ export default function PaywallModal() {
     setIapError('');
     setIapDiag('');
     setIapPackages([]);
+    setElapsed(0);
 
     if (!isIapAvailable()) {
       setIapStatus('unavailable');
@@ -37,6 +51,12 @@ export default function PaywallModal() {
 
     setIapStatus('loading');
     let cancelled = false;
+
+    // Seconds spent waiting since this effect started (detects a request that never settles).
+    const startedAt = Date.now();
+    const elapsedTimer = setInterval(() => {
+      if (!cancelled) setElapsed(Math.round((Date.now() - startedAt) / 1000));
+    }, 1000);
 
     diagnoseIap((text) => {
       if (!cancelled) setIapDiag((prev) => (prev ? prev + ' | ' + text : text));
@@ -61,6 +81,7 @@ export default function PaywallModal() {
 
     return () => {
       cancelled = true;
+      clearInterval(elapsedTimer);
     };
   }, [showPaywallModal, isIOS, iapRetry]);
 
@@ -377,7 +398,7 @@ export default function PaywallModal() {
               wordBreak: 'break-all',
               textAlign: 'center'
             }}>
-              [{IAP_BUILD_TAG}] status={iapStatus} tick={tick}
+              [{IAP_BUILD_TAG}] status={iapStatus} tick={tick} session={sessionId} waited={elapsed}s
               {iapDiag ? <div style={{ marginTop: '0.25rem' }}>{iapDiag}</div> : null}
             </div>
 
