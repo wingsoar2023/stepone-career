@@ -16,12 +16,27 @@ const PRODUCT_TYPE = {
 };
 
 // Bumped on every IAP-related build so the paywall can show which binary is running.
-export const IAP_BUILD_TAG = 'b18';
+export const IAP_BUILD_TAG = 'b19';
+
+// Module-level execution log. The paywall re-reads this on every heartbeat render, so it
+// shows progress even if a React state update were somehow dropped.
+export const iapLog = [];
+export const logStep = (text) => {
+  try {
+    iapLog.push(text);
+    if (iapLog.length > 40) iapLog.shift();
+  } catch (e) {}
+};
 
 const withTimeout = (promise, ms, label) =>
   Promise.race([
     promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error(label + ' timed out')), ms))
+    new Promise((_, reject) =>
+      setTimeout(() => {
+        logStep(`TIMEOUT:${label}`);
+        reject(new Error(label + ' timed out'));
+      }, ms)
+    )
   ]);
 
 async function getPlugin() {
@@ -33,14 +48,17 @@ export const isIapAvailable = () => Boolean(isNativeIOS());
 
 // Returns the App Store products (same shape the paywall expects).
 export async function getIapOfferings() {
+  logStep('offerings:start');
   try {
     const NP = await getPlugin();
+    logStep('offerings:plugin=' + (NP ? 'ok' : 'null'));
     if (!NP) return [];
     const { products } = await withTimeout(
       NP.getProducts({ productIdentifiers: [PRODUCT_IDS.monthly, PRODUCT_IDS.lifetime] }),
       12000,
       'getProducts'
     );
+    logStep('offerings:got=' + (products || []).length);
     return (products || []).map((p) => ({
       id: p.identifier,
       productId: p.identifier,
@@ -51,6 +69,7 @@ export async function getIapOfferings() {
       period: p.identifier === PRODUCT_IDS.monthly ? 'MONTHLY' : 'LIFETIME'
     }));
   } catch (err) {
+    logStep('offerings:ERR=' + String(err?.message || err).slice(0, 40));
     console.warn('App Store products unavailable:', err);
     return [];
   }
@@ -125,7 +144,10 @@ export async function restoreIapPurchases() {
 // Diagnostics: reports progress step by step via onStep so the paywall can show partial
 // results even if a later step never settles (that is exactly the failure we are chasing).
 export async function diagnoseIap(onStep = () => {}) {
-  const push = (text) => onStep(text);
+  const push = (text) => {
+    logStep(text);
+    onStep(text);
+  };
 
   push(`ios=${isNativeIOS()}`);
 
