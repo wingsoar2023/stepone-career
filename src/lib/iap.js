@@ -16,7 +16,7 @@ const PRODUCT_TYPE = {
 };
 
 // Bumped on every IAP-related build so the paywall can show which binary is running.
-export const IAP_BUILD_TAG = 'b17';
+export const IAP_BUILD_TAG = 'b18';
 
 const withTimeout = (promise, ms, label) =>
   Promise.race([
@@ -156,12 +156,32 @@ export async function diagnoseIap(onStep = () => {}) {
       return;
     }
     push('plugin=ok');
-    const supported = await NP.isBillingSupported().catch(() => null);
-    if (supported) push(`billing=${supported.isBillingSupported}`);
-    const { products } = await NP.getProducts({
-      productIdentifiers: [PRODUCT_IDS.monthly, PRODUCT_IDS.lifetime]
-    });
-    push(`products=${(products || []).length}`);
+
+    // Trivial native round-trip: proves the plugin's method dispatch works at all.
+    try {
+      const v = await withTimeout(NP.getPluginVersion(), 6000, 'getPluginVersion');
+      push(`ver=${v?.version ?? '?'}`);
+    } catch (e) {
+      push('ver=FAIL:' + String(e?.message || e).slice(0, 50));
+    }
+
+    try {
+      const supported = await withTimeout(NP.isBillingSupported(), 8000, 'isBillingSupported');
+      push(`billing=${supported?.isBillingSupported}`);
+    } catch (e) {
+      push('billing=FAIL:' + String(e?.message || e).slice(0, 50));
+    }
+
+    try {
+      const { products } = await withTimeout(
+        NP.getProducts({ productIdentifiers: [PRODUCT_IDS.monthly, PRODUCT_IDS.lifetime] }),
+        12000,
+        'getProducts'
+      );
+      push(`products=${(products || []).length}`);
+    } catch (e) {
+      push('products=FAIL:' + String(e?.message || e).slice(0, 50));
+    }
   } catch (err) {
     push('FAIL: ' + String(err?.message || err).slice(0, 70));
   }
