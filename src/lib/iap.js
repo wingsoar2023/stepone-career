@@ -16,7 +16,7 @@ const PRODUCT_TYPE = {
 };
 
 // Bumped on every IAP-related build so the paywall can show which binary is running.
-export const IAP_BUILD_TAG = 'b19';
+export const IAP_BUILD_TAG = 'b20';
 
 // Module-level execution log. The paywall re-reads this on every heartbeat render, so it
 // shows progress even if a React state update were somehow dropped.
@@ -39,7 +39,10 @@ const withTimeout = (promise, ms, label) =>
     )
   ]);
 
-async function getPlugin() {
+// IMPORTANT: never return the Capacitor plugin proxy from an async function and never
+// `await` it. The proxy answers EVERY property access (including `then`) with a function,
+// so JS treats it as a thenable and waits forever. Always read it synchronously.
+function getPlugin() {
   if (!isNativeIOS()) return null;
   return NativePurchases || null;
 }
@@ -50,7 +53,7 @@ export const isIapAvailable = () => Boolean(isNativeIOS());
 export async function getIapOfferings() {
   logStep('offerings:start');
   try {
-    const NP = await getPlugin();
+    const NP = getPlugin();
     logStep('offerings:plugin=' + (NP ? 'ok' : 'null'));
     if (!NP) return [];
     const { products } = await withTimeout(
@@ -84,7 +87,7 @@ export function pickPackage(products, plan) {
 }
 
 export async function purchaseIapPackage(pkg) {
-  const NP = await getPlugin();
+  const NP = getPlugin();
   if (!NP) {
     return { success: false, error: { message: 'Purchases are not available in this app build.' } };
   }
@@ -109,7 +112,7 @@ export async function purchaseIapPackage(pkg) {
 
 async function hasProPurchase() {
   try {
-    const NP = await getPlugin();
+    const NP = getPlugin();
     if (!NP) return false;
     const { purchases } = await withTimeout(
       NP.getPurchases({ onlyCurrentEntitlements: true }),
@@ -130,7 +133,7 @@ export const checkProEntitlement = hasProPurchase;
 
 export async function restoreIapPurchases() {
   try {
-    const NP = await getPlugin();
+    const NP = getPlugin();
     if (!NP) {
       return { success: false, error: { message: 'Not available on this platform.' } };
     }
@@ -172,7 +175,7 @@ export async function diagnoseIap(onStep = () => {}) {
   }
 
   try {
-    const NP = await getPlugin();
+    const NP = getPlugin();
     if (!NP) {
       push('plugin=null');
       return;
