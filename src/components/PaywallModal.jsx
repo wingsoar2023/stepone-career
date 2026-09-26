@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Sparkles, ShieldCheck, Zap, Award, Star, CreditCard, Users, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { isIapAvailable, getIapOfferings, purchaseIapPackage, pickPackage, diagnoseIap, IAP_BUILD_TAG, iapLog } from '../lib/iap';
+import { isIapAvailable, getIapOfferings, purchaseIapPackage, pickPackage } from '../lib/iap';
 
 const STRIPE_MONTHLY_URL = import.meta.env.VITE_STRIPE_MONTHLY_URL || 'https://buy.stripe.com/eVq28r0MDb8mekk1tW7ok00';
 const STRIPE_LIFETIME_URL = import.meta.env.VITE_STRIPE_LIFETIME_URL || 'https://buy.stripe.com/14A7sL52T0tI900egI7ok01';
@@ -13,35 +13,12 @@ export default function PaywallModal() {
   const [iapPackages, setIapPackages] = useState([]);
   const [iapError, setIapError] = useState('');
   const [iapStatus, setIapStatus] = useState('idle'); // idle | loading | ready | unavailable | error
-  const [iapDiag, setIapDiag] = useState('');
   const [iapRetry, setIapRetry] = useState(0);
-  const [tick, setTick] = useState(0);
-  const [elapsed, setElapsed] = useState(0);
-
-  // Session counter: increments on every page load. If it keeps climbing, the WebView is
-  // reloading itself (which would explain a request that never settles).
-  const [sessionId] = useState(() => {
-    try {
-      const n = Number(sessionStorage.getItem('iap_session') || '0') + 1;
-      sessionStorage.setItem('iap_session', String(n));
-      return n;
-    } catch (e) {
-      return -1;
-    }
-  });
-
-  // Heartbeat: if this number stops increasing, the JS thread itself is blocked.
-  useEffect(() => {
-    const id = setInterval(() => setTick((n) => n + 1), 500);
-    return () => clearInterval(id);
-  }, []);
 
   useEffect(() => {
     if (!showPaywallModal || !isIOS) return;
     setIapError('');
-    setIapDiag('');
     setIapPackages([]);
-    setElapsed(0);
 
     if (!isIapAvailable()) {
       setIapStatus('unavailable');
@@ -52,23 +29,13 @@ export default function PaywallModal() {
     setIapStatus('loading');
     let cancelled = false;
 
-    // Seconds spent waiting since this effect started (detects a request that never settles).
-    const startedAt = Date.now();
-    const elapsedTimer = setInterval(() => {
-      if (!cancelled) setElapsed(Math.round((Date.now() - startedAt) / 1000));
-    }, 1000);
-
-    diagnoseIap((text) => {
-      if (!cancelled) setIapDiag((prev) => (prev ? prev + ' | ' + text : text));
-    });
-
     getIapOfferings()
       .then((pkgs) => {
         if (cancelled) return;
         setIapPackages(pkgs);
         if (pkgs.length === 0) {
           setIapStatus('error');
-          setIapError('Could not load store items. Please tap Retry.');
+          setIapError('App Store items could not be loaded. Please check your connection and tap Retry.');
         } else {
           setIapStatus('ready');
         }
@@ -76,12 +43,11 @@ export default function PaywallModal() {
       .catch((err) => {
         if (cancelled) return;
         setIapStatus('error');
-        setIapError('Store error: ' + String(err?.message || err));
+        setIapError('App Store error: ' + String(err?.message || err));
       });
 
     return () => {
       cancelled = true;
-      clearInterval(elapsedTimer);
     };
   }, [showPaywallModal, isIOS, iapRetry]);
 
@@ -385,34 +351,17 @@ export default function PaywallModal() {
               Payment is charged to your Apple ID and managed by the App Store. Subscriptions auto-renew unless cancelled at least 24 hours before the end of the period. Manage or cancel anytime in your Apple ID settings.
             </p>
 
-            {/* Build/status line: always visible so we can tell which binary is running */}
-            <div style={{
-              marginTop: '0.6rem',
-              padding: '0.5rem 0.65rem',
-              border: '1px dashed var(--border-light)',
-              borderRadius: 'var(--radius-sm)',
-              background: 'var(--bg-main)',
-              fontSize: '0.72rem',
-              color: 'var(--text-main)',
-              fontFamily: 'monospace',
-              wordBreak: 'break-all',
-              textAlign: 'center'
-            }}>
-              [{IAP_BUILD_TAG}] status={iapStatus} tick={tick} session={sessionId} waited={elapsed}s
-              {iapDiag ? <div style={{ marginTop: '0.25rem' }}>{iapDiag}</div> : null}
-              {/* Module-level execution log, re-read on every heartbeat render */}
-              <div style={{ marginTop: '0.25rem', color: 'var(--primary)' }}>{iapLog.join(' » ')}</div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.35rem' }}>
-              <button
-                type="button"
-                onClick={() => setIapRetry((n) => n + 1)}
-                style={{ background: 'none', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-sm)', padding: '0.3rem 0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)', cursor: 'pointer' }}
-              >
-                Retry store check
-              </button>
-            </div>
+            {iapStatus === 'error' && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setIapRetry((n) => n + 1)}
+                  style={{ background: 'none', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-sm)', padding: '0.35rem 0.85rem', fontSize: '0.78rem', color: 'var(--text-muted)', cursor: 'pointer' }}
+                >
+                  Retry
+                </button>
+              </div>
+            )}
           </>
         )}
         {!isIOS && (
