@@ -15,6 +15,9 @@ const PRODUCT_TYPE = {
   [PRODUCT_IDS.lifetime]: 'inapp'
 };
 
+// Bumped on every IAP-related build so the paywall can show which binary is running.
+export const IAP_BUILD_TAG = 'b14';
+
 const withTimeout = (promise, ms, label) =>
   Promise.race([
     promise,
@@ -123,6 +126,7 @@ export async function restoreIapPurchases() {
 export async function diagnoseIap() {
   const steps = [];
   try {
+    steps.push(IAP_BUILD_TAG);
     steps.push(`ios=${isNativeIOS()}`);
     const NP = await getPlugin();
     if (!NP) {
