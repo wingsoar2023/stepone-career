@@ -11,18 +11,53 @@ const PRODUCT_IDS = {
   lifetime: 'com.steponecareer.lifetime'
 };
 
-let initialized = false;
+// Memoised SDK promise: guarantees configure() runs exactly once even when several
+// callers (entitlement check + paywall) race at startup.
+let sdkPromise = null;
+
+const withTimeout = (promise, ms, label) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(label + ' timed out after ' + ms + 'ms')), ms))
+  ]);
 
 async function getSdk() {
   if (!isNativeIOS()) return null;
   // Guard: never configure the SDK with an empty key (would throw / crash on launch).
   if (!RC_PUBLIC_KEY) return null;
-  const { Purchases } = await import('@revenuecat/purchases-capacitor');
-  if (!initialized) {
-    await Purchases.configure({ apiKey: RC_PUBLIC_KEY });
-    initialized = true;
+  if (!sdkPromise) {
+    sdkPromise = (async () => {
+      const { Purchases } = await withTimeout(import('@revenuecat/purchases-capacitor'), 10000, 'plugin import');
+      await withTimeout(Purchases.configure({ apiKey: RC_PUBLIC_KEY }), 10000, 'configure');
+      return Purchases;
+    })().catch((err) => {
+      sdkPromise = null; // allow a retry on the next call
+      throw err;
+    });
   }
-  return Purchases;
+  return sdkPromise;
+}
+
+// Temporary diagnostics shown inside the paywall so failures are never silent.
+export async function diagnoseIap() {
+  const steps = [];
+  try {
+    steps.push(`ios=${isNativeIOS()}`);
+    steps.push(`key=${RC_PUBLIC_KEY ? 'set' : 'MISSING'}`);
+    const Purchases = await getSdk();
+    if (!Purchases) {
+      steps.push('sdk=null');
+      return steps.join(' | ');
+    }
+    steps.push('sdk=ok');
+    const offerings = await withTimeout(Purchases.getOfferings(), 10000, 'getOfferings');
+    const pkgs = offerings?.current?.availablePackages || [];
+    steps.push(`offerings=${pkgs.length}`);
+    return steps.join(' | ');
+  } catch (err) {
+    steps.push('FAIL: ' + (err?.message || String(err)));
+    return steps.join(' | ');
+  }
 }
 
 export const isIapAvailable = () => Boolean(isNativeIOS() && RC_PUBLIC_KEY);

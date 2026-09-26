@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Sparkles, ShieldCheck, Zap, Award, Star, CreditCard, Users, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { isIapAvailable, getIapOfferings, purchaseIapPackage, pickPackage } from '../lib/iap';
+import { isIapAvailable, getIapOfferings, purchaseIapPackage, pickPackage, diagnoseIap } from '../lib/iap';
 
 const STRIPE_MONTHLY_URL = import.meta.env.VITE_STRIPE_MONTHLY_URL || 'https://buy.stripe.com/eVq28r0MDb8mekk1tW7ok00';
 const STRIPE_LIFETIME_URL = import.meta.env.VITE_STRIPE_LIFETIME_URL || 'https://buy.stripe.com/14A7sL52T0tI900egI7ok01';
@@ -13,10 +13,12 @@ export default function PaywallModal() {
   const [iapPackages, setIapPackages] = useState([]);
   const [iapError, setIapError] = useState('');
   const [iapStatus, setIapStatus] = useState('idle'); // idle | loading | ready | unavailable | error
+  const [iapDiag, setIapDiag] = useState('');
 
   useEffect(() => {
     if (!showPaywallModal || !isIOS) return;
     setIapError('');
+    setIapDiag('');
 
     if (!isIapAvailable()) {
       setIapStatus('unavailable');
@@ -26,16 +28,13 @@ export default function PaywallModal() {
 
     setIapStatus('loading');
     let cancelled = false;
-    const timeoutId = setTimeout(() => {
-      if (!cancelled) {
-        setIapStatus('error');
-        setIapError('Could not reach the App Store. Check your internet connection and reopen this window.');
-      }
-    }, 12000);
+
+    diagnoseIap().then((info) => {
+      if (!cancelled) setIapDiag(info);
+    });
 
     getIapOfferings().then((pkgs) => {
       if (cancelled) return;
-      clearTimeout(timeoutId);
       setIapPackages(pkgs);
       if (pkgs.length === 0) {
         setIapStatus('error');
@@ -47,7 +46,6 @@ export default function PaywallModal() {
 
     return () => {
       cancelled = true;
-      clearTimeout(timeoutId);
     };
   }, [showPaywallModal, isIOS]);
 
@@ -350,6 +348,11 @@ export default function PaywallModal() {
             <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', textAlign: 'center', marginTop: '0.5rem' }}>
               Payment is charged to your Apple ID and managed by the App Store. Subscriptions auto-renew unless cancelled at least 24 hours before the end of the period. Manage or cancel anytime in your Apple ID settings.
             </p>
+            {iapDiag && (
+              <p style={{ fontSize: '0.68rem', color: 'var(--text-light)', textAlign: 'center', marginTop: '0.35rem', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                {iapDiag}
+              </p>
+            )}
           </>
         )}
         {!isIOS && (
