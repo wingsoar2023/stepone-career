@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { Target, Sparkles, Copy, Download, Volume2, VolumeX, Printer, Edit3, Eye, ArrowRight, Building2, DollarSign, Check, Send, ChevronDown, ChevronUp, Lock, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Target, Sparkles, Copy, Download, Volume2, VolumeX, Printer, Edit3, Eye, ArrowRight, Building2, DollarSign, Check, Send, ChevronDown, ChevronUp, Lock, ShieldCheck, Search } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { getTranslation } from '../utils/i18n';
 import { analyzeJdWithAi } from '../utils/ai';
 import { useQuota } from '../context/QuotaContext';
 import { useAuth } from '../context/AuthContext';
+import { searchLcaEmployers, lcaRowToCompanyInfo } from '../lib/lca';
+import { isSupabaseConfigured } from '../lib/supabaseClient';
 
 export default function JobMatcher({ profileData, markStepDone, setActiveTab, currentLang }) {
   const t = (key) => getTranslation(currentLang, key);
@@ -22,6 +24,28 @@ export default function JobMatcher({ profileData, markStepDone, setActiveTab, cu
   const [customCoverLetter, setCustomCoverLetter] = useState('');
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Live DOL LCA employer lookup (fills the gap for employers outside the curated list)
+  const [companyOverride, setCompanyOverride] = useState(null);
+  const [h1bQuery, setH1bQuery] = useState('');
+  const [h1bResults, setH1bResults] = useState([]);
+  const [h1bLoading, setH1bLoading] = useState(false);
+
+  useEffect(() => {
+    if (!result?.companyInfo?.generic || companyOverride) return;
+    if (!isSupabaseConfigured || h1bQuery.trim().length < 3) {
+      setH1bResults([]);
+      return;
+    }
+    setH1bLoading(true);
+    const timer = setTimeout(() => {
+      searchLcaEmployers(h1bQuery).then((rows) => {
+        setH1bResults(rows.map(lcaRowToCompanyInfo));
+        setH1bLoading(false);
+      });
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [h1bQuery, result?.companyInfo?.generic, companyOverride]);
 
   // Networking & Referral Message Generator State
   const [showNetworking, setShowNetworking] = useState(false);
@@ -62,6 +86,7 @@ Qualifications:
 
     setResult(res);
     setCustomCoverLetter(res.coverLetterEnglish);
+    setCompanyOverride(null);
     setAnalyzing(false);
     markStepDone('matcher');
 
@@ -167,6 +192,8 @@ ${candidateName}`;
     setTimeout(() => setCopiedMsgKey(null), 2000);
   };
 
+  const companyInfo = companyOverride || result?.companyInfo;
+
   return (
     <div className="fade-in" style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1.5rem' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
@@ -270,19 +297,85 @@ ${candidateName}`;
 
                 <div style={{ flex: 1, paddingLeft: '1rem', borderLeft: '1px solid var(--border-light)' }}>
                   <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <Building2 size={16} color="var(--primary)" /> {result.companyInfo.name}
+                    <Building2 size={16} color="var(--primary)" /> {companyInfo.name}
                   </div>
                   <div style={{ fontSize: '0.78rem', color: 'var(--accent-green)', fontWeight: 700, marginTop: '2px' }}>
-                    {result.companyInfo.sponsorshipStatus}
+                    {companyInfo.sponsorshipStatus}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                    {t('filingVolume')}: {result.companyInfo.filingVolume}
+                    {t('filingVolume')}: {companyInfo.filingVolume}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                    <DollarSign size={14} /> {t('typicalSalary')}: {result.companyInfo.typicalSalary}
+                    <DollarSign size={14} /> {t('typicalSalary')}: {companyInfo.typicalSalary}
                   </div>
                 </div>
               </div>
+
+              {/* Live DOL LCA employer lookup — fills the gap for employers outside the curated list */}
+              {result.companyInfo.generic && !companyOverride && (
+                <div style={{
+                  background: 'var(--bg-main)',
+                  border: '1px solid var(--border-light)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '0.9rem'
+                }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
+                    <Search size={14} color="var(--primary)" /> H-1B Sponsorship Database Lookup (US DOL LCA filings)
+                  </div>
+                  <input
+                    value={h1bQuery}
+                    onChange={(e) => setH1bQuery(e.target.value)}
+                    placeholder="Type the employer name, e.g. Stripe, Morgan Stanley, Tesla..."
+                    style={{
+                      width: '100%',
+                      padding: '0.55rem 0.75rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-light)',
+                      fontSize: '0.85rem',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  {h1bLoading && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.45rem' }}>Searching {h1bQuery}...</div>
+                  )}
+                  {h1bResults.length > 0 && (
+                    <div style={{ marginTop: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      {h1bResults.map((info) => (
+                        <button
+                          key={info.name}
+                          onClick={() => setCompanyOverride(info)}
+                          style={{
+                            textAlign: 'left',
+                            background: 'white',
+                            border: '1px solid var(--border-light)',
+                            borderRadius: 'var(--radius-sm)',
+                            padding: '0.55rem 0.7rem',
+                            cursor: 'pointer',
+                            fontSize: '0.78rem'
+                          }}
+                        >
+                          <div style={{ fontWeight: 800, color: 'var(--text-main)' }}>{info.name}</div>
+                          <div style={{ color: 'var(--accent-green)', fontWeight: 700 }}>{info.sponsorshipStatus} · {info.filingVolume}</div>
+                          <div style={{ color: 'var(--text-muted)' }}>{info.typicalSalary} · Top states: {info.insights.match(/Top filing locations: (.*?)\./)?.[1] || 'n/a'}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {!h1bLoading && h1bQuery.trim().length >= 3 && h1bResults.length === 0 && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.45rem' }}>
+                      No certified LCA filing found for "{h1bQuery}" in Oct 2025 - Jun 2026. Always verify with the employer.
+                    </div>
+                  )}
+                </div>
+              )}
+              {companyOverride && (
+                <button
+                  onClick={() => setCompanyOverride(null)}
+                  style={{ alignSelf: 'flex-start', background: 'none', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-sm)', padding: '0.35rem 0.8rem', fontSize: '0.75rem', color: 'var(--text-muted)', cursor: 'pointer' }}
+                >
+                  ← Look up a different employer
+                </button>
+              )}
 
               <div style={{
                 fontSize: '0.74rem',

@@ -283,7 +283,7 @@ export default function PaywallModal() {
               '🤝 Unlimited LinkedIn & Alumni Networking Messages',
               '📊 Unlimited Application Tracker with Cloud Sync',
               '🤖 Unlimited Career Mentor AI Consultation',
-              '🛡️ Full H-1B LCA Sponsorship Database (10,000+ Cos)'
+              '🛡️ Real H-1B LCA Database (53,000+ US employers, live DOL data)'
             ].map((feature, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                 <Check size={14} color="var(--accent-green)" style={{ flexShrink: 0 }} />
