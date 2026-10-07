@@ -27,3 +27,5 @@ Thumbs.db
 
 # App Store upload artifacts (screenshots etc.)
 appstore_screenshots/
+scripts/.db-url
+scripts/.cache/

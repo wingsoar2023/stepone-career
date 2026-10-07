@@ -259,7 +259,7 @@ export default function Roadmap({ setActiveTab, completedSteps = [], currentLang
       {/* Why StepOne Career Comparison Table */}
       <div className="glass-card fade-in" style={{ marginTop: '2rem', padding: '1.5rem', overflowX: 'auto' }}>
         <h3 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '0.25rem' }}>
-          💡 Why 10,000+ International Grads Trust StepOne Career
+          💡 Why International Grads Choose StepOne Career
         </h3>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
           See how StepOne stacks up against the paid tools international students actually pay for.

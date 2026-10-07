@@ -106,6 +106,7 @@ export function lookupH1bDatabase(jdText) {
   }
   return {
     name: 'Standard US Employer / Startup',
+    generic: true,
     sponsorshipStatus: 'Varies by company',
     filingVolume: 'Unknown — verify per company',
     typicalSalary: '$85k–$125k base (typical entry-level range)',
