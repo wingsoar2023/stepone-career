@@ -12,12 +12,12 @@ const raw = url;
 const m = raw.match(/^postgresql:\/\/postgres:\[(.*?)\]@/);
 if (!m) throw new Error('db-url format: expect postgresql://postgres:[password]@host/port/db');
 const password = encodeURIComponent(m[1]);
-const ref = 'stbxqprhssgnqdmajdkd';
+const ref = process.env.SUPABASE_PROJECT_REF || 'stbxqprhssgnqdmajdkd';
 // Supabase direct-connection host no longer resolves; use the regional pooler.
 const connStr = `postgresql://postgres.${ref}:${password}@aws-0-us-west-2.pooler.supabase.com:6543/postgres`;
 const client = new pg.Client({
   connectionString: connStr,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: process.env.PGSSL_ALLOW_SELF_SIGNED !== 'true' }
 });
 
 async function run() {

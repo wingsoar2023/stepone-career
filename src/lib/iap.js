@@ -110,23 +110,35 @@ export async function purchaseIapPackage(pkg) {
   }
 }
 
-async function hasProPurchase() {
+export async function getActiveProPurchase() {
   try {
     const NP = getPlugin();
-    if (!NP) return false;
+    if (!NP) return null;
     const { purchases } = await withTimeout(
       NP.getPurchases({ onlyCurrentEntitlements: true }),
       12000,
       'getPurchases'
     );
-    return (purchases || []).some((p) => {
+    const match = (purchases || []).find((p) => {
       const id = p?.productIdentifier || p?.identifier;
       return id === PRODUCT_IDS.monthly || id === PRODUCT_IDS.lifetime;
     });
+    if (!match) return null;
+    const productId = match.productIdentifier || match.identifier;
+    return {
+      ...match,
+      productIdentifier: productId,
+      planType: productId === PRODUCT_IDS.lifetime ? 'lifetime' : 'pro'
+    };
   } catch (err) {
     console.warn('Entitlement check failed:', err);
-    return false;
+    return null;
   }
+}
+
+async function hasProPurchase() {
+  const active = await getActiveProPurchase();
+  return Boolean(active);
 }
 
 export const checkProEntitlement = hasProPurchase;

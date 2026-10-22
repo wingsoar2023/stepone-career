@@ -3,7 +3,7 @@ import { X, Mail, Lock, Sparkles, CheckCircle2, ArrowRight, ShieldCheck } from '
 import { useAuth } from '../context/AuthContext';
 
 export default function AuthModal() {
-  const { showAuthModal, setShowAuthModal, loginWithGoogle, loginWithEmail, signUpWithEmail, loginAsDemoReviewer, isIOS, isSupabaseConfigured } = useAuth();
+  const { showAuthModal, setShowAuthModal, loginWithGoogle, loginWithEmail, signUpWithEmail, isIOS, isSupabaseConfigured } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -195,7 +195,7 @@ export default function AuthModal() {
               <input
                 type="email"
                 required
-                placeholder="alex.chen@berkeley.edu"
+                placeholder="you@university.edu"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={{
@@ -251,26 +251,30 @@ export default function AuthModal() {
             {loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Sign In'}
           </button>
 
-          {/* Reviewer Credentials Quick-Fill (Apple Guideline 2.1) */}
-          <div style={{ textAlign: 'center', marginTop: '0.35rem' }}>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('alex.chen@berkeley.edu');
-                setPassword('Reviewer2026!');
-              }}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--text-light)',
-                fontSize: '0.74rem',
-                textDecoration: 'underline',
-                cursor: 'pointer'
-              }}
-            >
-              Fill Demo Credentials (alex.chen@berkeley.edu)
-            </button>
-          </div>
+          {/* Reviewer Credentials Quick-Fill (Only rendered when VITE_ENABLE_REVIEW_DEMO and env credentials are provided) */}
+          {import.meta.env.VITE_ENABLE_REVIEW_DEMO === 'true' &&
+            import.meta.env.VITE_REVIEW_DEMO_EMAIL &&
+            import.meta.env.VITE_REVIEW_DEMO_PASSWORD && (
+              <div style={{ textAlign: 'center', marginTop: '0.35rem' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail(import.meta.env.VITE_REVIEW_DEMO_EMAIL);
+                    setPassword(import.meta.env.VITE_REVIEW_DEMO_PASSWORD);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-light)',
+                    fontSize: '0.74rem',
+                    textDecoration: 'underline',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Fill Reviewer Demo Credentials
+                </button>
+              </div>
+            )}
         </form>
 
         {/* Toggle sign in / sign up */}

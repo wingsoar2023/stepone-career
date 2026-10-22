@@ -17,8 +17,12 @@ jobs:
           SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
-          URL="${SUPABASE_URL:-https://stbxqprhssgnqdmajdkd.supabase.co}"
-          KEY="${SUPABASE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0YnhxcHJoc3NnbnFkbWFqZGtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3NzgzNjEsImV4cCI6MjA3OTM1NDM2MX0.JD_9nQCgr0GVi76ynvL8gAaQjmO6y9XQz7glQQfIWbQ}"
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+            echo "❌ Error: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY repository secrets must be configured."
+            exit 1
+          fi
+          URL="$SUPABASE_URL"
+          KEY="$SUPABASE_KEY"
 
           echo "Pinging Supabase Database to keep instance active..."
           echo "Target Supabase Host: $URL"

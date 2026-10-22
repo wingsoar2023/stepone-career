@@ -61,6 +61,7 @@ export function QuotaProvider({ children }) {
             networkingMsg: data.networking_msg_count || 0,
             mentorQuestions: data.mentor_questions_count || 0,
             headshot: data.headshot_count || 0,
+            pdfExport: data.pdf_export_count || 0,
           };
           setUsage(merged);
           localStorage.setItem(storageKey, JSON.stringify(merged));
@@ -124,24 +125,27 @@ export function QuotaProvider({ children }) {
 
   // Consume 1 credit of the action. Returns true if allowed, false if blocked.
   const consumeQuota = async (actionKey) => {
-    // 1. Real authenticated users: enforce atomic server-side RPC quota check
+    // 1. Real authenticated users: enforce atomic server-side RPC quota check (fail-closed, never fallback to client state)
     if (isCloudUser) {
       try {
         const { data, error } = await supabase.rpc('consume_user_quota', { p_action: actionKey });
-        if (!error && data) {
-          if (!data.allowed) {
-            notifyQuotaBlocked(actionKey, data.tier === 'lifetime');
-            return false;
-          }
-          // Update local mirror state
-          const newCount = data.current;
-          const updated = { ...usage, [actionKey]: newCount };
-          setUsage(updated);
-          localStorage.setItem(storageKey, JSON.stringify(updated));
-          return true;
+        if (error || !data) {
+          console.warn('Server quota RPC error:', error?.message);
+          return false;
         }
+        if (!data.allowed) {
+          notifyQuotaBlocked(actionKey, data.tier === 'lifetime');
+          return false;
+        }
+        // Update local mirror state
+        const newCount = data.current;
+        const updated = { ...usage, [actionKey]: newCount };
+        setUsage(updated);
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+        return true;
       } catch (err) {
-        console.warn('RPC quota check fallback to local:', err);
+        console.warn('RPC quota check failed:', err);
+        return false;
       }
     }
 

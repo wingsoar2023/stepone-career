@@ -7,7 +7,7 @@ const STRIPE_MONTHLY_URL = import.meta.env.VITE_STRIPE_MONTHLY_URL || 'https://b
 const STRIPE_LIFETIME_URL = import.meta.env.VITE_STRIPE_LIFETIME_URL || 'https://buy.stripe.com/14A7sL52T0tI900egI7ok01';
 
 export default function PaywallModal() {
-  const { showPaywallModal, setShowPaywallModal, paywallReason, upgradeToPro, isPro, isIOS } = useAuth();
+  const { user, setShowAuthModal, showPaywallModal, setShowPaywallModal, paywallReason, upgradeToPro, isPro, isIOS } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState('monthly'); // 'monthly' | 'lifetime'
   const [isProcessing, setIsProcessing] = useState(false);
   const [iapPackages, setIapPackages] = useState([]);
@@ -69,27 +69,39 @@ export default function PaywallModal() {
       setIapError(res.error?.message || 'Purchase could not be completed.');
       return;
     }
-    await upgradeToPro(selectedPlan === 'lifetime' ? 'lifetime' : 'pro');
+    await upgradeToPro(selectedPlan === 'lifetime' ? 'lifetime' : 'pro', res.purchase || pkg);
     setShowPaywallModal(false);
   };
 
   const handleCheckout = (plan) => {
-    setIsProcessing(true);
-    
-    // Redirect directly to live Stripe Checkout
-    const targetUrl = plan === 'lifetime' ? STRIPE_LIFETIME_URL : STRIPE_MONTHLY_URL;
-
-    if (targetUrl) {
-      window.location.href = targetUrl;
+    // Require authenticated cloud user so Stripe webhook can bind client_reference_id
+    if (!user || user.isDemo) {
+      setShowPaywallModal(false);
+      setShowAuthModal(true);
       return;
     }
 
-    // Fallback simulation
-    setTimeout(async () => {
-      await upgradeToPro(plan === 'lifetime' ? 'lifetime' : 'pro');
-      setIsProcessing(false);
-      setShowPaywallModal(false);
-    }, 900);
+    setIsProcessing(true);
+
+    // Redirect directly to live Stripe Checkout with user identity attached for JEV Webhook verification
+    const targetUrl = plan === 'lifetime' ? STRIPE_LIFETIME_URL : STRIPE_MONTHLY_URL;
+
+    if (targetUrl) {
+      try {
+        const checkoutUrl = new URL(targetUrl);
+        checkoutUrl.searchParams.set('client_reference_id', user.id);
+        if (user.email) {
+          checkoutUrl.searchParams.set('prefilled_email', user.email);
+        }
+        window.location.href = checkoutUrl.toString();
+        return;
+      } catch (e) {
+        window.location.href = targetUrl;
+        return;
+      }
+    }
+
+    setIsProcessing(false);
   };
 
   return (

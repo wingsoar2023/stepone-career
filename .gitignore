@@ -1,8 +1,9 @@
-# Dependencies
+﻿# Dependencies
 node_modules/
 
 # Build output
 dist/
+dist-ssr/
 
 # Logs
 *.log
@@ -15,17 +16,40 @@ Thumbs.db
 .vscode/
 *.suo
 
-# Environment
+# Environment Variables (block all .env variants except .env.example)
 .env
-.env.local
+.env.*
+!.env.example
 
-# Netlify local state
-.netlify/
+# Android / Google Play Signing & Release Artifacts (CRITICAL SECRETS)
+*.keystore
+*.jks
+signing-key-info.txt
+StepOne - Google Play package/
+StepOne - Google Play package.zip
 
-# Playwright MCP artifacts
-.playwright-mcp/
+# iOS / Fastlane Signing & Certificates (CRITICAL SECRETS)
+*.p8
+*.p12
+*.cer
+*.mobileprovision
+ios/App/output/
+ios/fastlane/report.xml
+ios/fastlane/Preview.html
+ios/fastlane/screenshots/
+ios/fastlane/test_output/
 
-# App Store upload artifacts (screenshots etc.)
-appstore_screenshots/
+# Database & Local Scripts Secrets
 scripts/.db-url
 scripts/.cache/
+supabase/.temp/
+supabase/.branches/
+
+# Local Recordings & Review Artifacts
+.netlify/
+.playwright-mcp/
+appstore_screenshots/
+recordings/
+*.mp4
+appstore_appeal_full.txt
+appstore_metadata.md

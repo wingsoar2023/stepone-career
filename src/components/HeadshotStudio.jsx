@@ -2,9 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Download, Sparkles, Sliders, Check, ArrowRight, ShieldCheck } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { getTranslation } from '../utils/i18n';
+import { useQuota } from '../context/QuotaContext';
 
 export default function HeadshotStudio({ profileData, markStepDone, setActiveTab, currentLang }) {
   const t = (key) => getTranslation(currentLang, key);
+  const { consumeQuota } = useQuota();
 
   const [imageSrc, setImageSrc] = useState(null);
   const [bgColor, setBgColor] = useState('gradient-blue');
@@ -143,8 +145,10 @@ export default function HeadshotStudio({ profileData, markStepDone, setActiveTab
     };
   }, [imageSrc, bgColor, brightness, contrast, showBadge, badgeText]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!canvasRef.current) return;
+    const allowed = await consumeQuota('headshot');
+    if (!allowed) return;
     const link = document.createElement('a');
     link.download = `StepOne_LinkedIn_ProfilePhoto.png`;
     link.href = canvasRef.current.toDataURL('image/png', 1.0);

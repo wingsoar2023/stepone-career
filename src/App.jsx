@@ -74,7 +74,6 @@ function MainApp() {
     setCompletedSteps([]);
     localStorage.removeItem('stepone_profile');
     localStorage.removeItem('stepone_completed');
-    localStorage.removeItem('stepone_apikey');
     localStorage.removeItem('stepone_applications');
     setActiveTab('roadmap');
   };
