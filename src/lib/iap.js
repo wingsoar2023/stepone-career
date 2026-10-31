@@ -16,7 +16,7 @@ const PRODUCT_TYPE = {
 };
 
 // Bumped on every IAP-related build so the paywall can show which binary is running.
-export const IAP_BUILD_TAG = 'b21';
+export const IAP_BUILD_TAG = 'b23';
 
 // Module-level execution log. The paywall re-reads this on every heartbeat render, so it
 // shows progress even if a React state update were somehow dropped.
