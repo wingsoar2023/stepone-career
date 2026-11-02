@@ -1,8 +1,17 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "com.steponecareer.app",
-        "sha256_cert_fingerprints": ["73:FE:61:F9:C6:01:B0:20:6E:6A:99:C4:C1:00:BE:62:DC:99:08:61:B1:EB:91:BF:4D:E9:E0:1C:44:29:6C:2A"]
-      }
-    }]
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.steponecareer.app",
+      "sha256_cert_fingerprints": [
+        "73:FE:61:F9:C6:01:B0:20:6E:6A:99:C4:C1:00:BE:62:DC:99:08:61:B1:EB:91:BF:4D:E9:E0:1C:44:29:6C:2A",
+        "29:06:0C:68:8C:B0:5E:19:FF:3A:C7:47:7D:AC:D1:A4:5D:63:7E:46:3E:BE:18:80:5A:66:2F:12:A9:57:22:E8",
+        "36:33:F5:6E:D6:5F:C8:D9:F7:D7:C5:AE:5C:ED:03:30:F9:71:B1:6A:93:D6:BE:12:F8:B7:16:EC:68:DD:B9:96",
+        "3C:13:C6:C7:61:17:DD:05:F3:E5:69:7F:19:49:33:1B:05:62:8E:EE:24:7C:49:DC:13:7C:8E:8C:5C:5E:78:09"
+      ]
+    }
+  }
+]
